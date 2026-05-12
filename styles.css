@@ -142,7 +142,7 @@ button {
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  min-height: 84px;
+  min-height: 102px;
   min-width: 0;
 }
 
@@ -153,8 +153,8 @@ button {
 }
 
 .logo-mark {
-  width: 108px;
-  height: 80px;
+  width: 168px;
+  height: 112px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -169,7 +169,7 @@ button {
 
 .nav-links {
   position: fixed;
-  inset: 84px 0 auto 0;
+  inset: 102px 0 auto 0;
   display: grid;
   gap: 0.25rem;
   padding: 1rem;
@@ -1120,8 +1120,8 @@ button {
   }
 
   .logo-mark {
-    width: 74px;
-    height: 48px;
+    width: 122px;
+    height: 82px;
   }
 
   .nav-actions .btn-whatsapp {
