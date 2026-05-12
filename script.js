@@ -149,7 +149,7 @@ function createListingCard(listing) {
   card.innerHTML = `
     ${
       photoUrl
-        ? `<div class="listing-image"><img src="${photoUrl}" alt="${listing.propertyName}"></div>`
+        ? `<div class="listing-image"><img src="${photoUrl}" alt="${listing.propertyName}" loading="lazy" decoding="async"></div>`
         : `<div class="listing-placeholder">${listing.propertyName}</div>`
     }
     <div class="listing-content">
@@ -228,7 +228,7 @@ function renderModalPhoto() {
     thumbButton.type = "button";
     thumbButton.className = `modal-thumb${index === currentModalPhotoIndex ? " is-active" : ""}`;
     thumbButton.setAttribute("aria-label", `View photo ${index + 1}`);
-    thumbButton.innerHTML = `<img src="${photo.url}" alt="${currentModalListing.propertyName} thumbnail ${index + 1}">`;
+    thumbButton.innerHTML = `<img src="${photo.url}" alt="${currentModalListing.propertyName} thumbnail ${index + 1}" loading="lazy" decoding="async">`;
     thumbButton.addEventListener("click", () => {
       currentModalPhotoIndex = index;
       renderModalPhoto();
