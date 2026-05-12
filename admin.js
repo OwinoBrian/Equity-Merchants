@@ -1,7 +1,7 @@
 // Replace these with the Airtable URLs you want the client to use.
-const AIRTABLE_EDITOR_URL = "YOUR_AIRTABLE_EDITOR_URL_HERE";
-const AIRTABLE_ADD_FORM_URL = "YOUR_AIRTABLE_ADD_FORM_URL_HERE";
-const AIRTABLE_BASE_URL = "YOUR_AIRTABLE_BASE_URL_HERE";
+const AIRTABLE_EDITOR_URL = "https://airtable.com/appwFq9FXqtf2cV6B/tbl7SBcj3I3jc0QbU";
+const AIRTABLE_ADD_FORM_URL = "https://airtable.com/appwFq9FXqtf2cV6B/pagWEy5JYFErSCwn4/form";
+const AIRTABLE_BASE_URL = "https://airtable.com/appwFq9FXqtf2cV6B";
 
 const editorLink = document.getElementById("airtable-editor-link");
 const addLink = document.getElementById("airtable-add-link");
