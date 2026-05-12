@@ -1,7 +1,7 @@
 // WhatsApp contact number used across the site.
 const WHATSAPP_NUMBER = "254759043208";
 const LISTINGS_API_URL = "https://equity-merchants-listings.ujao.workers.dev";
-const LISTINGS_PER_PAGE = 9;
+const LISTINGS_PER_PAGE = 6;
 
 const navLinks = document.getElementById("nav-links");
 const menuToggle = document.getElementById("menu-toggle");
@@ -44,9 +44,19 @@ let currentModalPhotoIndex = 0;
 let touchStartX = 0;
 let touchStartY = 0;
 let touchInProgress = false;
+const debugEnabled = new URLSearchParams(window.location.search).has("debug");
+const debugLogs = [];
 
 function buildWhatsAppUrl(message) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
+}
+
+function isMobileViewport() {
+  return window.matchMedia("(max-width: 767px)").matches;
+}
+
+function getListingsPerPage() {
+  return isMobileViewport() ? 4 : LISTINGS_PER_PAGE;
 }
 
 function formatWhatsAppDisplay(number) {
@@ -129,14 +139,70 @@ function normalizeListing(record) {
     type: fields.Type || "House",
     description: fields.Description || "Contact us for more information about this property.",
     photos: photoField
-      .map((item) => ({ url: item.url }))
-      .filter((item) => item.url)
+      .map((item) => ({
+        url: item.url,
+        cardUrl: item.cardUrl || item.url,
+        thumbUrl: item.thumbUrl || item.cardUrl || item.url
+      }))
+      .filter((item) => item.url || item.cardUrl || item.thumbUrl)
   };
+}
+
+function getCardPhotoUrl(listing) {
+  const photo = listing.photos[0];
+  if (!photo) {
+    return "";
+  }
+
+  return photo.cardUrl || photo.thumbUrl || photo.url || "";
+}
+
+function getModalPhotoUrl(photo) {
+  return photo.cardUrl || photo.url || photo.thumbUrl || "";
+}
+
+function getThumbPhotoUrl(photo) {
+  return photo.thumbUrl || photo.cardUrl || photo.url || "";
+}
+
+function logDebug(message, details = "") {
+  if (!debugEnabled) {
+    return;
+  }
+
+  const timestamp = new Date().toLocaleTimeString();
+  debugLogs.push(`[${timestamp}] ${message}${details ? `: ${details}` : ""}`);
+  renderDebugPanel();
+}
+
+function renderDebugPanel() {
+  let panel = document.getElementById("debug-panel");
+  if (!panel) {
+    panel = document.createElement("div");
+    panel.id = "debug-panel";
+    panel.style.position = "fixed";
+    panel.style.left = "0.75rem";
+    panel.style.right = "0.75rem";
+    panel.style.bottom = "0.75rem";
+    panel.style.zIndex = "2000";
+    panel.style.maxHeight = "38vh";
+    panel.style.overflow = "auto";
+    panel.style.padding = "0.85rem";
+    panel.style.borderRadius = "16px";
+    panel.style.background = "rgba(0,0,0,0.82)";
+    panel.style.color = "#fff";
+    panel.style.font = "12px/1.45 monospace";
+    panel.style.whiteSpace = "pre-wrap";
+    panel.style.boxShadow = "0 12px 28px rgba(0,0,0,0.24)";
+    document.body.appendChild(panel);
+  }
+
+  panel.textContent = debugLogs.slice(-10).join("\n");
 }
 
 function createListingCard(listing) {
   const message = `Hi, I am interested in ${listing.propertyName} listed on your website. Please share more details.`;
-  const photoUrl = listing.photos[0] ? listing.photos[0].url : "";
+  const photoUrl = isMobileViewport() ? "" : getCardPhotoUrl(listing);
 
   const card = document.createElement("article");
   card.className = "card listing-card";
@@ -279,10 +345,11 @@ function renderListingsPage() {
     return;
   }
 
-  const totalPages = Math.ceil(filteredListings.length / LISTINGS_PER_PAGE);
+  const listingsPerPage = getListingsPerPage();
+  const totalPages = Math.ceil(filteredListings.length / listingsPerPage);
   currentPage = Math.min(currentPage, totalPages);
-  const startIndex = (currentPage - 1) * LISTINGS_PER_PAGE;
-  const pageListings = filteredListings.slice(startIndex, startIndex + LISTINGS_PER_PAGE);
+  const startIndex = (currentPage - 1) * listingsPerPage;
+  const pageListings = filteredListings.slice(startIndex, startIndex + listingsPerPage);
 
   listingsGrid.innerHTML = "";
   pageListings.forEach((listing) => {
@@ -315,10 +382,10 @@ function renderModalPhoto() {
   const photos = currentModalListing.photos;
   const activePhoto = photos[currentModalPhotoIndex];
 
-  if (activePhoto) {
+  if (activePhoto && getModalPhotoUrl(activePhoto)) {
     modalImage.hidden = false;
     modalPlaceholder.hidden = true;
-    modalImage.src = activePhoto.url;
+    modalImage.src = getModalPhotoUrl(activePhoto);
     modalImage.alt = currentModalListing.propertyName;
   } else {
     modalImage.hidden = true;
@@ -335,7 +402,7 @@ function renderModalPhoto() {
     thumbButton.type = "button";
     thumbButton.className = `modal-thumb${index === currentModalPhotoIndex ? " is-active" : ""}`;
     thumbButton.setAttribute("aria-label", `View photo ${index + 1}`);
-    thumbButton.innerHTML = `<img src="${photo.url}" alt="${currentModalListing.propertyName} thumbnail ${index + 1}" loading="lazy" decoding="async">`;
+    thumbButton.innerHTML = `<img src="${getThumbPhotoUrl(photo)}" alt="${currentModalListing.propertyName} thumbnail ${index + 1}" loading="lazy" decoding="async">`;
     thumbButton.addEventListener("click", () => {
       currentModalPhotoIndex = index;
       renderModalPhoto();
@@ -418,6 +485,7 @@ async function fetchListings() {
   }
 
   try {
+    logDebug("Fetching listing page data", LISTINGS_API_URL);
     const response = await fetch(LISTINGS_API_URL, {
       method: "GET",
       headers: { Accept: "application/json" }
@@ -432,6 +500,8 @@ async function fetchListings() {
       ? data.records.map(normalizeListing).sort((a, b) => b.createdTime - a.createdTime)
       : [];
 
+    logDebug("Listing page data loaded", String(allListings.length));
+
     if (!allListings.length) {
       showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
       return;
@@ -441,6 +511,7 @@ async function fetchListings() {
     refreshFilteredListings();
   } catch (error) {
     console.error("Unable to load Airtable listings:", error);
+    logDebug("Listing page failed", error instanceof Error ? error.message : String(error));
     showListingState("Unable to load listings right now. Please contact us directly.");
   }
 }
@@ -469,11 +540,19 @@ paginationPrev.addEventListener("click", () => {
 });
 
 paginationNext.addEventListener("click", () => {
-  const totalPages = Math.ceil(filteredListings.length / LISTINGS_PER_PAGE);
+  const totalPages = Math.ceil(filteredListings.length / getListingsPerPage());
   if (currentPage < totalPages) {
     currentPage += 1;
     renderListingsPage();
   }
+});
+
+window.addEventListener("resize", () => {
+  if (!allListings.length) {
+    return;
+  }
+
+  refreshFilteredListings(false);
 });
 
 modalClose.addEventListener("click", closeListingModal);
@@ -504,4 +583,10 @@ document.addEventListener("keydown", (event) => {
 
 closeMenuOnNavigate();
 setStaticWhatsAppLinks();
+window.addEventListener("error", (event) => {
+  logDebug("Window error", event.message);
+});
+window.addEventListener("unhandledrejection", (event) => {
+  logDebug("Promise rejection", String(event.reason));
+});
 fetchListings();

@@ -74,7 +74,9 @@ function sanitizeRecord(record) {
     ? fields.Photo
         .filter((item) => item && item.url)
         .map((item) => ({
-          url: item.url
+          url: item.url,
+          cardUrl: item.thumbnails && item.thumbnails.large ? item.thumbnails.large.url : item.url,
+          thumbUrl: item.thumbnails && item.thumbnails.small ? item.thumbnails.small.url : item.url
         }))
     : [];
 
