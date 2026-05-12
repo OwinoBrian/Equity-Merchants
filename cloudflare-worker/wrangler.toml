@@ -1,0 +1,8 @@
+name = "equity-merchants-listings"
+main = "src/index.js"
+compatibility_date = "2026-05-12"
+
+[vars]
+ALLOWED_ORIGIN = "https://owinobrian.github.io"
+AIRTABLE_BASE_ID = "appwFq9FXqtf2cV6B"
+AIRTABLE_TABLE_NAME = "Listings"
