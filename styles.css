@@ -33,7 +33,11 @@ body {
   font-family: "DM Sans", sans-serif;
   color: var(--charcoal);
   background:
-    radial-gradient(circle at top left, rgba(102, 155, 188, 0.16), transparent 28%),
+    radial-gradient(
+      circle at top left,
+      rgba(102, 155, 188, 0.16),
+      transparent 28%
+    ),
     linear-gradient(180deg, #fffdfb 0%, #fff8f2 48%, #fffdfb 100%);
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
@@ -150,7 +154,7 @@ button {
 
 .logo-mark {
   width: 108px;
-  height: 8px;
+  height: 80px;
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -175,7 +179,10 @@ button {
   transform-origin: top;
   opacity: 0;
   visibility: hidden;
-  transition: transform var(--transition), opacity var(--transition), visibility var(--transition);
+  transition:
+    transform var(--transition),
+    opacity var(--transition),
+    visibility var(--transition);
 }
 
 .nav-links.is-open {
@@ -188,7 +195,9 @@ button {
   color: rgba(255, 255, 255, 0.9);
   padding: 0.8rem 0.9rem;
   border-radius: 12px;
-  transition: background var(--transition), color var(--transition);
+  transition:
+    background var(--transition),
+    color var(--transition);
 }
 
 .nav-links a:hover,
@@ -221,12 +230,21 @@ button {
   height: 2px;
   border-radius: 999px;
   background: currentColor;
-  transition: transform var(--transition), opacity var(--transition), top var(--transition);
+  transition:
+    transform var(--transition),
+    opacity var(--transition),
+    top var(--transition);
 }
 
-.hamburger-lines span:nth-child(1) { top: 0; }
-.hamburger-lines span:nth-child(2) { top: 6px; }
-.hamburger-lines span:nth-child(3) { top: 12px; }
+.hamburger-lines span:nth-child(1) {
+  top: 0;
+}
+.hamburger-lines span:nth-child(2) {
+  top: 6px;
+}
+.hamburger-lines span:nth-child(3) {
+  top: 12px;
+}
 
 .hamburger.is-active .hamburger-lines span:nth-child(1) {
   top: 6px;
@@ -254,7 +272,12 @@ button {
   font-weight: 700;
   text-align: center;
   white-space: normal;
-  transition: transform var(--transition), background var(--transition), color var(--transition), border-color var(--transition), box-shadow var(--transition);
+  transition:
+    transform var(--transition),
+    background var(--transition),
+    color var(--transition),
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .btn:hover,
@@ -293,8 +316,16 @@ button {
   position: relative;
   overflow: hidden;
   background:
-    radial-gradient(circle at top left, rgba(193, 18, 31, 0.28), transparent 30%),
-    radial-gradient(circle at bottom right, rgba(102, 155, 188, 0.26), transparent 34%),
+    radial-gradient(
+      circle at top left,
+      rgba(193, 18, 31, 0.28),
+      transparent 30%
+    ),
+    radial-gradient(
+      circle at bottom right,
+      rgba(102, 155, 188, 0.26),
+      transparent 34%
+    ),
     linear-gradient(135deg, #00263b 0%, #003049 38%, #780000 100%);
   color: var(--white);
 }
@@ -386,7 +417,11 @@ button {
   width: min(100%, 340px);
   padding: 1.6rem;
   border-radius: 26px;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.08));
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.16),
+    rgba(255, 255, 255, 0.08)
+  );
   border: 1px solid rgba(255, 255, 255, 0.14);
   box-shadow: var(--shadow);
   backdrop-filter: blur(18px);
@@ -415,8 +450,13 @@ button {
 }
 
 @keyframes floatCard {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
 }
 
 .services-grid,
@@ -473,7 +513,11 @@ button {
   place-items: center;
   margin-bottom: 1rem;
   border-radius: 16px;
-  background: linear-gradient(145deg, rgba(102, 155, 188, 0.18), rgba(193, 18, 31, 0.1));
+  background: linear-gradient(
+    145deg,
+    rgba(102, 155, 188, 0.18),
+    rgba(193, 18, 31, 0.1)
+  );
   color: var(--navy);
 }
 
@@ -526,7 +570,10 @@ button {
   display: flex;
   flex-direction: column;
   cursor: pointer;
-  transition: transform var(--transition), box-shadow var(--transition), border-color var(--transition);
+  transition:
+    transform var(--transition),
+    box-shadow var(--transition),
+    border-color var(--transition);
 }
 
 .listing-card:hover,
@@ -658,7 +705,11 @@ button {
 .about-copy {
   padding: 1.7rem;
   background:
-    radial-gradient(circle at top right, rgba(102, 155, 188, 0.18), transparent 30%),
+    radial-gradient(
+      circle at top right,
+      rgba(102, 155, 188, 0.18),
+      transparent 30%
+    ),
     linear-gradient(155deg, var(--navy), #042033 58%, var(--oxblood) 100%);
   color: rgba(255, 255, 255, 0.88);
 }
@@ -708,7 +759,11 @@ button {
 .admin-note {
   padding: 1rem 1.05rem;
   border-radius: 16px;
-  background: linear-gradient(145deg, rgba(102, 155, 188, 0.1), rgba(255, 255, 255, 0.9));
+  background: linear-gradient(
+    145deg,
+    rgba(102, 155, 188, 0.1),
+    rgba(255, 255, 255, 0.9)
+  );
 }
 
 .contact-item span {
@@ -748,7 +803,9 @@ button {
   padding: 0.95rem 1rem;
   background: var(--white);
   color: var(--charcoal);
-  transition: border-color var(--transition), box-shadow var(--transition);
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
 }
 
 .field input:focus,
@@ -773,7 +830,11 @@ button {
   text-align: center;
   padding: 1.5rem;
   border-radius: 20px;
-  background: linear-gradient(145deg, rgba(0, 48, 73, 0.98), rgba(120, 0, 0, 0.96));
+  background: linear-gradient(
+    145deg,
+    rgba(0, 48, 73, 0.98),
+    rgba(120, 0, 0, 0.96)
+  );
   color: #ffd8b4;
   font-weight: 700;
 }
@@ -875,7 +936,9 @@ button {
 .reveal {
   opacity: 0;
   transform: translateY(24px);
-  transition: opacity 650ms ease, transform 650ms ease;
+  transition:
+    opacity 650ms ease,
+    transform 650ms ease;
 }
 
 .reveal.is-visible {
