@@ -13,7 +13,7 @@
     content="Equity Merchants Ltd, Nairobi real estate, Kenya property, land for sale Kenya, homes for sale Nairobi, commercial property Kenya, property management Nairobi"
   >
   <meta name="robots" content="index, follow">
-  <meta name="theme-color" content="#1B2A4A">
+  <meta name="theme-color" content="#003049">
   <meta property="og:type" content="website">
   <meta property="og:title" content="Equity Merchants Ltd | Property & Real Estate in Kenya">
   <meta
@@ -124,7 +124,7 @@
           <div class="floating-card">
             <p class="mini-label">Trusted Performance</p>
             <p class="floating-stat">150+</p>
-            <p>Properties Sold with guided support across Nairobi and high-growth investment corridors.</p>
+            <p>Properties sold with guided support across Nairobi and high-growth investment corridors.</p>
           </div>
         </div>
       </div>
@@ -216,7 +216,7 @@
               </svg>
             </div>
             <h3>Contracting &amp; Development</h3>
-            <p>From groundbreaking to handover — we build what we sell.</p>
+            <p>From groundbreaking to handover &mdash; we build what we sell.</p>
           </article>
         </div>
       </div>
@@ -252,7 +252,7 @@
           <div class="about-accent"></div>
           <h2>Built for confident property decisions.</h2>
           <p>
-            Equity Merchants Ltd is a Nairobi-based property and commercial services firm. We handle property sales, land transactions, letting, government supplies, contracting, and development — all under one roof. Our clients trust us for market knowledge, verified listings, and end-to-end transaction support.
+            Equity Merchants Ltd is a Nairobi-based property and commercial services firm. We handle property sales, land transactions, letting, government supplies, contracting, and development &mdash; all under one roof. Our clients trust us for market knowledge, verified listings, and end-to-end transaction support.
           </p>
         </div>
 
@@ -298,7 +298,7 @@
           </article>
           <article class="card why-card reveal">
             <h3>End-to-End Support</h3>
-            <p>From search to signing — we handle the process so you don't have to.</p>
+            <p>From search to signing &mdash; we handle the process so you don't have to.</p>
           </article>
           <article class="card why-card reveal">
             <h3>Fast, Transparent Transactions</h3>
@@ -369,7 +369,7 @@
             </form>
 
             <div class="map-placeholder">
-              Map loading — contact us for directions
+              Map loading &mdash; contact us for directions
             </div>
             <!--
             <iframe
@@ -402,6 +402,7 @@
           <a href="#listings">Listings</a>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
+          <a href="admin.html">Listings Admin</a>
         </div>
       </div>
 
@@ -420,6 +421,40 @@
       <a href="https://ujao-defined.com" target="_blank" rel="noopener noreferrer">Ujao Defined</a>.
     </div>
   </footer>
+
+  <div class="listing-modal" id="listing-modal" hidden>
+    <div class="listing-modal-panel">
+      <div class="modal-gallery">
+        <div class="modal-gallery-main">
+          <img id="modal-image" alt="" hidden>
+          <div class="modal-gallery-placeholder" id="modal-placeholder">Property preview</div>
+          <div class="modal-gallery-controls">
+            <button class="modal-nav" id="modal-prev" type="button" aria-label="Previous photo">&#8249;</button>
+            <button class="modal-nav" id="modal-next" type="button" aria-label="Next photo">&#8250;</button>
+          </div>
+        </div>
+        <div class="modal-thumbs" id="modal-thumbs"></div>
+      </div>
+
+      <div class="modal-content">
+        <button class="modal-close" id="modal-close" type="button" aria-label="Close listing modal">&#10005;</button>
+        <div class="modal-header">
+          <h3 id="modal-title">Property name</h3>
+          <div class="modal-meta">
+            <span class="badge badge-house" id="modal-badge">House</span>
+            <span class="modal-location" id="modal-location">Location</span>
+          </div>
+        </div>
+        <div class="modal-price" id="modal-price">KES 0</div>
+        <p class="modal-description" id="modal-description"></p>
+        <p class="listing-meta" id="modal-details"></p>
+        <div class="modal-actions">
+          <a class="btn btn-whatsapp" id="modal-whatsapp" href="#" target="_blank" rel="noopener noreferrer">Inquire on WhatsApp</a>
+          <button class="btn btn-outline" id="modal-close-secondary" type="button">Continue Browsing</button>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <script src="script.js" defer></script>
 </body>

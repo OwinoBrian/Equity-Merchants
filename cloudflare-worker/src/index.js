@@ -23,7 +23,13 @@ export default {
 
     if (!env.AIRTABLE_API_KEY || !env.AIRTABLE_BASE_ID || !env.AIRTABLE_TABLE_NAME) {
       return jsonResponse({
-        error: "Missing Airtable configuration"
+        error: "Missing Airtable configuration",
+        diagnostics: {
+          hasApiKey: Boolean(env.AIRTABLE_API_KEY),
+          hasBaseId: Boolean(env.AIRTABLE_BASE_ID),
+          hasTableName: Boolean(env.AIRTABLE_TABLE_NAME),
+          allowedOrigin: env.ALLOWED_ORIGIN || null
+        }
       }, 500, corsHeaders);
     }
 
@@ -67,12 +73,12 @@ export default {
 
 function sanitizeRecord(record) {
   const fields = record.fields || {};
-  const photo = Array.isArray(fields.Photo) && fields.Photo[0]
-    ? [
-        {
-          url: fields.Photo[0].url
-        }
-      ]
+  const photo = Array.isArray(fields.Photo)
+    ? fields.Photo
+        .filter((item) => item && item.url)
+        .map((item) => ({
+          url: item.url
+        }))
     : [];
 
   return {

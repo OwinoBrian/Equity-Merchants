@@ -138,6 +138,24 @@ After deployment:
 4. Confirm only `Active` listings appear.
 5. Confirm cards still work when a listing has no image.
 
+## 8. Set up the client admin page
+
+This project now includes `admin.html`, which is a simple client-facing management page.
+
+Open `admin.js` and replace:
+
+- `AIRTABLE_EDITOR_URL`
+- `AIRTABLE_ADD_FORM_URL`
+- `AIRTABLE_BASE_URL`
+
+Recommended Airtable setup:
+
+- Create a grid view called `Website Listings`
+- Show only the columns the client needs:
+  `Property Name`, `Location`, `Price`, `Type`, `Status`, `Description`, `Photo`
+- Share that view or invite the client as a collaborator if they need edit/delete access
+- Create a separate Airtable form for adding new listings, then paste its URL into `AIRTABLE_ADD_FORM_URL`
+
 ## Notes
 
 - Do not put the Airtable token in `script.js`.

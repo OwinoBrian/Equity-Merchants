@@ -11,6 +11,28 @@ const contactForm = document.getElementById("contact-form");
 const loadingState = document.getElementById("listings-loading");
 const listingsState = document.getElementById("listings-state");
 const listingsGrid = document.getElementById("listings-grid");
+const modal = document.getElementById("listing-modal");
+const modalClose = document.getElementById("modal-close");
+const modalCloseSecondary = document.getElementById("modal-close-secondary");
+const modalPrev = document.getElementById("modal-prev");
+const modalNext = document.getElementById("modal-next");
+const modalImage = document.getElementById("modal-image");
+const modalPlaceholder = document.getElementById("modal-placeholder");
+const modalThumbs = document.getElementById("modal-thumbs");
+const modalGalleryMain = document.querySelector(".modal-gallery-main");
+const modalTitle = document.getElementById("modal-title");
+const modalLocation = document.getElementById("modal-location");
+const modalPrice = document.getElementById("modal-price");
+const modalBadge = document.getElementById("modal-badge");
+const modalDescription = document.getElementById("modal-description");
+const modalWhatsapp = document.getElementById("modal-whatsapp");
+const modalDetails = document.getElementById("modal-details");
+
+let currentModalListing = null;
+let currentModalPhotoIndex = 0;
+let touchStartX = 0;
+let touchStartY = 0;
+let touchInProgress = false;
 
 function buildWhatsAppUrl(message) {
   return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(message)}`;
@@ -96,45 +118,79 @@ function getBadgeClass(type) {
   return "badge badge-house";
 }
 
-function createListingCard(record) {
+function normalizeListing(record) {
   const fields = record.fields || {};
-  const propertyName = fields["Property Name"] || fields.Name || "Untitled Property";
-  const location = fields.Location || "Location available on request";
-  const price = formatKES(fields.Price);
-  const type = fields.Type || "House";
-  const description = fields.Description || "Contact us for more information about this property.";
-  const photoUrl = fields.Photo && Array.isArray(fields.Photo) && fields.Photo[0] ? fields.Photo[0].url : "";
-  const message = `Hi, I am interested in ${propertyName} listed on your website. Please share more details.`;
+  const photoField = Array.isArray(fields.Photo) ? fields.Photo : [];
+
+  return {
+    id: record.id,
+    propertyName: fields["Property Name"] || fields.Name || "Untitled Property",
+    location: fields.Location || "Location available on request",
+    price: formatKES(fields.Price),
+    type: fields.Type || "House",
+    description: fields.Description || "Contact us for more information about this property.",
+    photos: photoField
+      .map((item) => ({
+        url: item.url
+      }))
+      .filter((item) => item.url)
+  };
+}
+
+function createListingCard(listing) {
+  const message = `Hi, I am interested in ${listing.propertyName} listed on your website. Please share more details.`;
+  const photoUrl = listing.photos[0] ? listing.photos[0].url : "";
 
   const card = document.createElement("article");
   card.className = "card listing-card";
+  card.tabIndex = 0;
+  card.setAttribute("role", "button");
+  card.setAttribute("aria-label", `View details for ${listing.propertyName}`);
 
   card.innerHTML = `
     ${
       photoUrl
-        ? `<div class="listing-image"><img src="${photoUrl}" alt="${propertyName}"></div>`
-        : `<div class="listing-placeholder">${propertyName}</div>`
+        ? `<div class="listing-image"><img src="${photoUrl}" alt="${listing.propertyName}"></div>`
+        : `<div class="listing-placeholder">${listing.propertyName}</div>`
     }
     <div class="listing-content">
       <div class="listing-top">
-        <span class="${getBadgeClass(type)}">${type}</span>
-        <span class="listing-price">${price}</span>
+        <span class="${getBadgeClass(listing.type)}">${listing.type}</span>
+        <span class="listing-price">${listing.price}</span>
       </div>
       <div>
-        <h3>${propertyName}</h3>
-        <p class="listing-meta">${location}</p>
+        <h3>${listing.propertyName}</h3>
+        <p class="listing-meta">${listing.location}</p>
       </div>
-      <p class="listing-copy">${description}</p>
-      <a
-        class="btn btn-whatsapp"
-        href="${buildWhatsAppUrl(message)}"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        Inquire on WhatsApp
-      </a>
+      <p class="listing-copy">${listing.description}</p>
+      <div class="listing-actions">
+        <button class="btn btn-outline" type="button">View Details</button>
+        <a
+          class="btn btn-whatsapp"
+          href="${buildWhatsAppUrl(message)}"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Inquire on WhatsApp
+        </a>
+      </div>
     </div>
   `;
+
+  card.addEventListener("click", (event) => {
+    if (event.target.closest("a")) {
+      return;
+    }
+
+    openListingModal(listing);
+  });
+
+  card.addEventListener("keydown", (event) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      openListingModal(listing);
+    }
+  });
 
   return card;
 }
@@ -146,9 +202,119 @@ function showListingState(message) {
   listingsState.textContent = message;
 }
 
+function renderModalPhoto() {
+  if (!currentModalListing) {
+    return;
+  }
+
+  const photos = currentModalListing.photos;
+  const activePhoto = photos[currentModalPhotoIndex];
+
+  if (activePhoto) {
+    modalImage.hidden = false;
+    modalPlaceholder.hidden = true;
+    modalImage.src = activePhoto.url;
+    modalImage.alt = currentModalListing.propertyName;
+  } else {
+    modalImage.hidden = true;
+    modalPlaceholder.hidden = false;
+    modalPlaceholder.textContent = currentModalListing.propertyName;
+  }
+
+  modalPrev.disabled = photos.length <= 1;
+  modalNext.disabled = photos.length <= 1;
+
+  modalThumbs.innerHTML = "";
+  photos.forEach((photo, index) => {
+    const thumbButton = document.createElement("button");
+    thumbButton.type = "button";
+    thumbButton.className = `modal-thumb${index === currentModalPhotoIndex ? " is-active" : ""}`;
+    thumbButton.setAttribute("aria-label", `View photo ${index + 1}`);
+    thumbButton.innerHTML = `<img src="${photo.url}" alt="${currentModalListing.propertyName} thumbnail ${index + 1}">`;
+    thumbButton.addEventListener("click", () => {
+      currentModalPhotoIndex = index;
+      renderModalPhoto();
+    });
+    modalThumbs.appendChild(thumbButton);
+  });
+}
+
+function openListingModal(listing) {
+  currentModalListing = listing;
+  currentModalPhotoIndex = 0;
+
+  modalTitle.textContent = listing.propertyName;
+  modalLocation.textContent = listing.location;
+  modalPrice.textContent = listing.price;
+  modalBadge.className = getBadgeClass(listing.type);
+  modalBadge.textContent = listing.type;
+  modalDescription.textContent = listing.description;
+  modalDetails.textContent = `${listing.photos.length || 0} photo${listing.photos.length === 1 ? "" : "s"} available`;
+  modalWhatsapp.href = buildWhatsAppUrl(`Hi, I am interested in ${listing.propertyName} listed on your website. Please share more details.`);
+
+  renderModalPhoto();
+  modal.hidden = false;
+  document.body.classList.add("modal-open");
+}
+
+function closeListingModal() {
+  modal.hidden = true;
+  document.body.classList.remove("modal-open");
+  currentModalListing = null;
+  currentModalPhotoIndex = 0;
+  modalImage.removeAttribute("src");
+  modalThumbs.innerHTML = "";
+}
+
+function changeModalPhoto(direction) {
+  if (!currentModalListing || currentModalListing.photos.length <= 1) {
+    return;
+  }
+
+  const total = currentModalListing.photos.length;
+  currentModalPhotoIndex = (currentModalPhotoIndex + direction + total) % total;
+  renderModalPhoto();
+}
+
+function handleTouchStart(event) {
+  if (!currentModalListing || currentModalListing.photos.length <= 1) {
+    return;
+  }
+
+  const touch = event.changedTouches[0];
+  touchStartX = touch.clientX;
+  touchStartY = touch.clientY;
+  touchInProgress = true;
+}
+
+function handleTouchEnd(event) {
+  if (!touchInProgress || !currentModalListing || currentModalListing.photos.length <= 1) {
+    touchInProgress = false;
+    return;
+  }
+
+  const touch = event.changedTouches[0];
+  const deltaX = touch.clientX - touchStartX;
+  const deltaY = touch.clientY - touchStartY;
+  const horizontalThreshold = 40;
+  const verticalThreshold = 30;
+
+  touchInProgress = false;
+
+  if (Math.abs(deltaX) < horizontalThreshold || Math.abs(deltaY) > Math.abs(deltaX) + verticalThreshold) {
+    return;
+  }
+
+  if (deltaX < 0) {
+    changeModalPhoto(1);
+  } else {
+    changeModalPhoto(-1);
+  }
+}
+
 async function fetchListings() {
   if (LISTINGS_API_URL.includes("YOUR_")) {
-    showListingState("No listings available at the moment \u2014 check back soon. Contact us directly on WhatsApp for off-market properties.");
+    showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
     return;
   }
 
@@ -165,20 +331,19 @@ async function fetchListings() {
     }
 
     const data = await response.json();
-    const activeRecords = Array.isArray(data.records) ? data.records : [];
-
-    loadingState.hidden = true;
+    const activeRecords = Array.isArray(data.records) ? data.records.map(normalizeListing) : [];
 
     if (!activeRecords.length) {
-      showListingState("No listings available at the moment \u2014 check back soon. Contact us directly on WhatsApp for off-market properties.");
+      showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
       return;
     }
 
     listingsGrid.innerHTML = "";
-    activeRecords.forEach((record) => {
-      listingsGrid.appendChild(createListingCard(record));
+    activeRecords.forEach((listing) => {
+      listingsGrid.appendChild(createListingCard(listing));
     });
 
+    loadingState.hidden = true;
     listingsState.hidden = true;
     listingsGrid.hidden = false;
   } catch (error) {
@@ -237,6 +402,36 @@ document.addEventListener("click", (event) => {
   const clickedInsideMenu = navLinks.contains(event.target) || menuToggle.contains(event.target);
   if (!clickedInsideMenu) {
     toggleMenu(true);
+  }
+});
+
+modalClose.addEventListener("click", closeListingModal);
+modalCloseSecondary.addEventListener("click", closeListingModal);
+modalPrev.addEventListener("click", () => changeModalPhoto(-1));
+modalNext.addEventListener("click", () => changeModalPhoto(1));
+modalGalleryMain.addEventListener("touchstart", handleTouchStart, { passive: true });
+modalGalleryMain.addEventListener("touchend", handleTouchEnd, { passive: true });
+modal.addEventListener("click", (event) => {
+  if (event.target === modal) {
+    closeListingModal();
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (modal.hidden) {
+    return;
+  }
+
+  if (event.key === "Escape") {
+    closeListingModal();
+  }
+
+  if (event.key === "ArrowLeft") {
+    changeModalPhoto(-1);
+  }
+
+  if (event.key === "ArrowRight") {
+    changeModalPhoto(1);
   }
 });
 
