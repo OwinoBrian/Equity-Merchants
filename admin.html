@@ -16,7 +16,10 @@
 <body>
   <header class="site-header">
     <div class="container nav-wrap">
-      <a href="index.html" class="logo">Equity Merchants Ltd</a>
+      <a href="index.html" class="logo" aria-label="Equity Merchants Ltd home">
+        <img class="logo-mark" src="Equity Merchants.png" alt="Equity Merchants Ltd logo">
+        <span class="logo-text">Equity Merchants Ltd</span>
+      </a>
       <div class="nav-actions">
         <a class="btn btn-outline" href="index.html">Back to Website</a>
       </div>
@@ -26,10 +29,10 @@
   <main>
     <section class="admin-hero">
       <div class="container">
-        <span class="admin-kicker">Listings Manager</span>
-        <h1 class="section-heading">A simple page your client can use to manage website listings.</h1>
+        <span class="admin-kicker">Client Instructions</span>
+        <h1 class="section-heading">Use this page to manage the properties that appear on the website.</h1>
         <p class="section-copy">
-          This page is designed to feel much simpler than Airtable itself. From here, your client can open the exact Airtable view you share with them to add, edit, archive, or delete properties.
+          Please use the buttons below whenever you want to add, edit, hide, or remove a listing. This page is your easiest starting point.
         </p>
       </div>
     </section>
@@ -37,33 +40,33 @@
     <section class="section">
       <div class="container admin-grid">
         <article class="card admin-card">
-          <h3>Open the listings workspace</h3>
-          <p>Use these buttons as the main client entry point. Replace the placeholder links in <strong>admin.js</strong> with your real Airtable URLs before sharing this page.</p>
+          <h3>Open the right Airtable pages</h3>
+          <p>Use these links depending on what you want to do. Once the Airtable links are added, this is the only page you need to bookmark.</p>
           <div class="admin-link-stack">
             <a class="btn btn-primary" id="airtable-editor-link" href="#" target="_blank" rel="noopener noreferrer">Open Listings Editor</a>
             <a class="btn btn-outline" id="airtable-add-link" href="#" target="_blank" rel="noopener noreferrer">Open Add Listing Form</a>
             <a class="btn btn-outline" id="airtable-base-link" href="#" target="_blank" rel="noopener noreferrer">Open Full Airtable Base</a>
           </div>
           <div class="admin-note" id="admin-note">
-            Paste your Airtable links into <code>admin.js</code> first. This page then becomes the easiest URL to share with your client.
+            Your links will appear here once they are connected in <code>admin.js</code>.
           </div>
         </article>
 
         <article class="card admin-card">
-          <h3>Recommended Airtable setup</h3>
-          <p>Create one clean Airtable grid view called <strong>Website Listings</strong> with the columns your client actually needs.</p>
+          <h3>What to include in every listing</h3>
+          <p>To make sure each property displays well on the website, please fill in these details clearly before publishing.</p>
           <div class="admin-link-stack">
             <div class="contact-item">
-              <span>Show these fields</span>
-              Property Name, Location, Price, Type, Status, Description, Photo
+              <span>Required details</span>
+              Property Name, Location, Price, Type, Description, Status, Photo
             </div>
             <div class="contact-item">
-              <span>Sort by</span>
-              Updated time or Property Name
+              <span>Best practice</span>
+              Upload multiple clear photos so clients can swipe through the gallery.
             </div>
             <div class="contact-item">
-              <span>Filter suggestion</span>
-              Show all records, so they can edit active and inactive listings
+              <span>Important</span>
+              Set Status to Active only when the property is ready to appear on the website.
             </div>
           </div>
         </article>
@@ -72,24 +75,24 @@
 
     <section class="section">
       <div class="container">
-        <span class="eyebrow">Client Workflow</span>
-        <h2 class="section-heading">How the client should use it</h2>
+        <span class="eyebrow">How To Use It</span>
+        <h2 class="section-heading">Follow these steps whenever you update properties.</h2>
         <div class="admin-steps">
           <article class="card admin-step">
-            <h3>1. Add a listing</h3>
-            <p>Click <strong>Open Add Listing Form</strong>, fill in the property details, upload all photos, and set <strong>Status</strong> to <strong>Active</strong> when ready to publish.</p>
+            <h3>1. Add a new listing</h3>
+            <p>Click <strong>Open Add Listing Form</strong>, fill in the property details, upload the photos, and set <strong>Status</strong> to <strong>Active</strong> when you want it published.</p>
           </article>
           <article class="card admin-step">
-            <h3>2. Edit a listing</h3>
-            <p>Click <strong>Open Listings Editor</strong>, search for the property, then update price, description, photos, or status. Website changes appear after the data refreshes from Airtable.</p>
+            <h3>2. Edit an existing listing</h3>
+            <p>Click <strong>Open Listings Editor</strong>, find the property, then update the description, price, location, type, status, or photos as needed.</p>
           </article>
           <article class="card admin-step">
-            <h3>3. Hide a listing</h3>
-            <p>Instead of deleting immediately, change <strong>Status</strong> from <strong>Active</strong> to something like <strong>Inactive</strong> or <strong>Sold</strong>. That removes it from the website while keeping the record.</p>
+            <h3>3. Hide a listing from the website</h3>
+            <p>Change the listing <strong>Status</strong> from <strong>Active</strong> to another value such as <strong>Inactive</strong> or <strong>Sold</strong>. This removes it from the live website without deleting it.</p>
           </article>
           <article class="card admin-step">
-            <h3>4. Delete permanently</h3>
-            <p>If they truly want a property gone, they can delete the row directly in Airtable from the editor view. It will disappear from the website the next time the site loads listings.</p>
+            <h3>4. Delete a listing permanently</h3>
+            <p>If a listing should be removed completely, delete that row directly in Airtable from the editor view.</p>
           </article>
         </div>
       </div>

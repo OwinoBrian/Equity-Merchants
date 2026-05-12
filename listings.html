@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>All Listings | Equity Merchants Ltd</title>
+  <meta
+    name="description"
+    content="Browse all active Equity Merchants Ltd property listings across Nairobi and beyond with filters by location, type, and price."
+  >
+  <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#003049">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap"
+    rel="stylesheet"
+  >
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="container nav-wrap">
+      <a href="index.html" class="logo" aria-label="Equity Merchants Ltd home">
+        <img class="logo-mark" src="Equity Merchants.png" alt="Equity Merchants Ltd logo">
+        <span class="logo-text">Equity Merchants Ltd</span>
+      </a>
+
+      <div class="nav-actions">
+        <nav class="nav-links" id="nav-links" aria-label="Primary navigation">
+          <a href="index.html#services">Services</a>
+          <a href="listings.html">Listings</a>
+          <a href="index.html#about">About</a>
+          <a href="index.html#contact">Contact</a>
+        </nav>
+
+        <a
+          class="btn btn-whatsapp"
+          id="nav-whatsapp"
+          href="index.html#contact"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Chat With Us
+        </a>
+
+        <button
+          class="hamburger"
+          id="menu-toggle"
+          type="button"
+          aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <span class="hamburger-lines" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="listings-page-hero">
+      <div class="container">
+        <span class="eyebrow">Property Catalogue</span>
+        <h1 class="section-heading">Browse All Available Properties</h1>
+        <p class="section-copy">
+          Filter active listings by location, price range, and property type, then open any listing for the full photo gallery and inquiry details.
+        </p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container listings-layout">
+        <aside class="card listings-sidebar">
+          <div class="filter-head">
+            <h2>Filter Listings</h2>
+            <button class="btn btn-outline filter-reset" id="filter-reset" type="button">Reset</button>
+          </div>
+
+          <form class="filter-form" id="filter-form">
+            <div class="field">
+              <label for="filter-location">Location</label>
+              <select id="filter-location" name="location">
+                <option value="">All locations</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="filter-type">Type</label>
+              <select id="filter-type" name="type">
+                <option value="">All types</option>
+                <option value="Land">Land</option>
+                <option value="House">House</option>
+                <option value="Commercial">Commercial</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="filter-min-price">Minimum Price</label>
+              <input id="filter-min-price" name="minPrice" type="number" min="0" step="1000" placeholder="e.g. 2000000">
+            </div>
+
+            <div class="field">
+              <label for="filter-max-price">Maximum Price</label>
+              <input id="filter-max-price" name="maxPrice" type="number" min="0" step="1000" placeholder="e.g. 15000000">
+            </div>
+          </form>
+        </aside>
+
+        <div class="listings-main">
+          <div class="listings-toolbar">
+            <div>
+              <h2 class="toolbar-title">Active Listings</h2>
+              <p class="toolbar-copy" id="results-summary">Loading listings...</p>
+            </div>
+            <div class="toolbar-actions">
+              <label class="sort-label" for="sort-order">Sort by</label>
+              <select id="sort-order" class="toolbar-select">
+                <option value="recent">Recently added</option>
+                <option value="price-asc">Price: Low to High</option>
+                <option value="price-desc">Price: High to Low</option>
+                <option value="name-asc">Name: A to Z</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="listings-shell">
+            <div class="listing-state" id="listings-state" hidden></div>
+            <div class="listing-grid listing-page-grid" id="listings-grid" hidden></div>
+          </div>
+
+          <div class="pagination" id="pagination" hidden>
+            <button class="btn btn-outline" id="pagination-prev" type="button">Previous</button>
+            <div class="pagination-pages" id="pagination-pages"></div>
+            <button class="btn btn-outline" id="pagination-next" type="button">Next</button>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div>
+        <div class="footer-brand">Equity Merchants Ltd</div>
+        <p>Property. Supplies. Solutions.</p>
+      </div>
+
+      <div>
+        <h3 class="footer-title">Quick Links</h3>
+        <div class="footer-links">
+          <a href="index.html#services">Services</a>
+          <a href="listings.html">Listings</a>
+          <a href="index.html#about">About</a>
+          <a href="index.html#contact">Contact</a>
+        </div>
+      </div>
+
+      <div>
+        <h3 class="footer-title">Contact</h3>
+        <div class="footer-contact">
+          <span>55356 00200 Nairobi, Kenya</span>
+          <a href="mailto:equity161@gmail.com">equity161@gmail.com</a>
+          <a id="footer-phone" href="index.html#contact" target="_blank" rel="noopener noreferrer">+254 759 043 208</a>
+        </div>
+      </div>
+    </div>
+
+    <div class="container footer-bottom">
+      &copy; 2026 Equity Merchants Ltd. Built by
+      <a href="https://ujao-defined.com" target="_blank" rel="noopener noreferrer">Ujao Defined</a>.
+    </div>
+  </footer>
+
+  <div class="listing-modal" id="listing-modal" hidden>
+    <div class="listing-modal-panel">
+      <div class="modal-gallery">
+        <div class="modal-gallery-main">
+          <img id="modal-image" alt="" hidden>
+          <div class="modal-gallery-placeholder" id="modal-placeholder">Property preview</div>
+          <div class="modal-gallery-controls">
+            <button class="modal-nav" id="modal-prev" type="button" aria-label="Previous photo">&#8249;</button>
+            <button class="modal-nav" id="modal-next" type="button" aria-label="Next photo">&#8250;</button>
+          </div>
+        </div>
+        <div class="modal-thumbs" id="modal-thumbs"></div>
+      </div>
+
+      <div class="modal-content">
+        <button class="modal-close" id="modal-close" type="button" aria-label="Close listing modal">&#10005;</button>
+        <div class="modal-header">
+          <h3 id="modal-title">Property name</h3>
+          <div class="modal-meta">
+            <span class="badge badge-house" id="modal-badge">House</span>
+            <span class="modal-location" id="modal-location">Location</span>
+          </div>
+        </div>
+        <div class="modal-price" id="modal-price">KES 0</div>
+        <p class="modal-description" id="modal-description"></p>
+        <p class="listing-meta" id="modal-details"></p>
+        <div class="modal-actions">
+          <a class="btn btn-whatsapp" id="modal-whatsapp" href="#" target="_blank" rel="noopener noreferrer">Inquire on WhatsApp</a>
+          <button class="btn btn-outline" id="modal-close-secondary" type="button">Continue Browsing</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="listings.js" defer></script>
+</body>
+</html>

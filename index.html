@@ -58,12 +58,15 @@
 <body>
   <header class="site-header">
     <div class="container nav-wrap">
-      <a href="#top" class="logo" aria-label="Equity Merchants Ltd home">Equity Merchants Ltd</a>
+      <a href="#top" class="logo" aria-label="Equity Merchants Ltd home">
+        <img class="logo-mark" src="Equity Merchants.png" alt="Equity Merchants Ltd logo">
+        <span class="logo-text">Equity Merchants Ltd</span>
+      </a>
 
       <div class="nav-actions">
         <nav class="nav-links" id="nav-links" aria-label="Primary navigation">
           <a href="#services">Services</a>
-          <a href="#listings">Listings</a>
+          <a href="listings.html">Listings</a>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
         </nav>
@@ -107,7 +110,7 @@
             &mdash; trusted by buyers and sellers since day one.
           </p>
           <div class="hero-cta">
-            <a class="btn btn-primary" href="#listings">View Listings</a>
+            <a class="btn btn-primary" href="listings.html">Browse All Listings</a>
             <a
               class="btn btn-secondary"
               id="hero-whatsapp"
@@ -224,24 +227,20 @@
 
     <section class="section" id="listings">
       <div class="container">
-        <div class="reveal">
-          <span class="eyebrow">Featured Listings</span>
-          <h2 class="section-heading">Available Properties</h2>
-          <p class="section-copy">
-            Browse active opportunities and reach out instantly on WhatsApp for pricing, site visits, and availability updates.
-          </p>
+        <div class="section-head-with-action reveal">
+          <div>
+            <span class="eyebrow">Featured Listings</span>
+            <h2 class="section-heading">Recently Added Properties</h2>
+            <p class="section-copy">
+              A quick look at the newest opportunities now live on our website. For the full catalogue, filters, and more property choices, open the main listings page.
+            </p>
+          </div>
+          <a class="btn btn-outline" href="listings.html">View All Listings</a>
         </div>
 
         <div class="listings-shell reveal">
-          <div class="spinner-wrap" id="listings-loading">
-            <div>
-              <div class="spinner" aria-hidden="true"></div>
-              <p class="listing-state">Loading active listings...</p>
-            </div>
-          </div>
-
           <div class="listing-state" id="listings-state" hidden></div>
-          <div class="listing-grid" id="listings-grid" hidden></div>
+          <div class="listing-grid featured-listing-grid" id="listings-grid" hidden></div>
         </div>
       </div>
     </section>
@@ -371,17 +370,6 @@
             <div class="map-placeholder">
               Map loading &mdash; contact us for directions
             </div>
-            <!--
-            <iframe
-              src="YOUR_GOOGLE_MAPS_EMBED_URL_HERE"
-              width="100%"
-              height="220"
-              style="border:0; border-radius: 20px; margin-top: 1.2rem;"
-              allowfullscreen=""
-              loading="lazy"
-              referrerpolicy="no-referrer-when-downgrade">
-            </iframe>
-            -->
           </div>
         </div>
       </div>
@@ -399,7 +387,7 @@
         <h3 class="footer-title">Quick Links</h3>
         <div class="footer-links">
           <a href="#services">Services</a>
-          <a href="#listings">Listings</a>
+          <a href="listings.html">Listings</a>
           <a href="#about">About</a>
           <a href="#contact">Contact</a>
           <a href="admin.html">Listings Admin</a>

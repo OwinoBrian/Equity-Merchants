@@ -1,15 +1,24 @@
 // WhatsApp contact number used across the site.
 const WHATSAPP_NUMBER = "254759043208";
-
-// Public API endpoint used by the site to load listings.
 const LISTINGS_API_URL = "https://equity-merchants-listings.ujao.workers.dev";
-const FEATURED_LISTINGS_LIMIT = 4;
+const LISTINGS_PER_PAGE = 9;
 
 const navLinks = document.getElementById("nav-links");
 const menuToggle = document.getElementById("menu-toggle");
-const contactForm = document.getElementById("contact-form");
 const listingsState = document.getElementById("listings-state");
 const listingsGrid = document.getElementById("listings-grid");
+const filterForm = document.getElementById("filter-form");
+const filterLocation = document.getElementById("filter-location");
+const filterType = document.getElementById("filter-type");
+const filterMinPrice = document.getElementById("filter-min-price");
+const filterMaxPrice = document.getElementById("filter-max-price");
+const filterReset = document.getElementById("filter-reset");
+const sortOrder = document.getElementById("sort-order");
+const resultsSummary = document.getElementById("results-summary");
+const pagination = document.getElementById("pagination");
+const paginationPrev = document.getElementById("pagination-prev");
+const paginationNext = document.getElementById("pagination-next");
+const paginationPages = document.getElementById("pagination-pages");
 const modal = document.getElementById("listing-modal");
 const modalClose = document.getElementById("modal-close");
 const modalCloseSecondary = document.getElementById("modal-close-secondary");
@@ -27,6 +36,9 @@ const modalDescription = document.getElementById("modal-description");
 const modalWhatsapp = document.getElementById("modal-whatsapp");
 const modalDetails = document.getElementById("modal-details");
 
+let allListings = [];
+let filteredListings = [];
+let currentPage = 1;
 let currentModalListing = null;
 let currentModalPhotoIndex = 0;
 let touchStartX = 0;
@@ -48,32 +60,17 @@ function formatWhatsAppDisplay(number) {
 function setStaticWhatsAppLinks() {
   const genericMessage = "Hello Equity Merchants Ltd, I would like to learn more about your available properties and services.";
   const genericUrl = buildWhatsAppUrl(genericMessage);
-  const displayNumber = formatWhatsAppDisplay(WHATSAPP_NUMBER);
+  const footerPhone = document.getElementById("footer-phone");
+  const navWhatsapp = document.getElementById("nav-whatsapp");
 
-  const staticLinks = [
-    document.getElementById("nav-whatsapp"),
-    document.getElementById("hero-whatsapp"),
-    document.getElementById("contact-whatsapp"),
-    document.getElementById("contact-phone"),
-    document.getElementById("footer-phone")
-  ];
+  if (navWhatsapp) {
+    navWhatsapp.href = genericUrl;
+  }
 
-  staticLinks.forEach((link) => {
-    if (link) {
-      link.href = genericUrl;
-    }
-  });
-
-  const phoneTargets = [
-    document.getElementById("contact-phone"),
-    document.getElementById("footer-phone")
-  ];
-
-  phoneTargets.forEach((link) => {
-    if (link) {
-      link.textContent = displayNumber;
-    }
-  });
+  if (footerPhone) {
+    footerPhone.href = genericUrl;
+    footerPhone.textContent = formatWhatsAppDisplay(WHATSAPP_NUMBER);
+  }
 }
 
 function toggleMenu(forceClose = false) {
@@ -126,6 +123,7 @@ function normalizeListing(record) {
     createdTime: record.createdTime ? new Date(record.createdTime) : new Date(0),
     propertyName: fields["Property Name"] || fields.Name || "Untitled Property",
     location: fields.Location || "Location available on request",
+    locationSlug: String(fields.Location || "").trim().toLowerCase(),
     priceValue: Number(fields.Price) || 0,
     price: formatKES(fields.Price),
     type: fields.Type || "House",
@@ -196,8 +194,117 @@ function createListingCard(listing) {
 
 function showListingState(message) {
   listingsGrid.hidden = true;
+  pagination.hidden = true;
   listingsState.hidden = false;
   listingsState.textContent = message;
+}
+
+function populateLocationFilter(listings) {
+  const uniqueLocations = [...new Set(
+    listings
+      .map((listing) => listing.location)
+      .filter(Boolean)
+  )].sort((a, b) => a.localeCompare(b));
+
+  filterLocation.innerHTML = '<option value="">All locations</option>';
+  uniqueLocations.forEach((location) => {
+    const option = document.createElement("option");
+    option.value = location.toLowerCase();
+    option.textContent = location;
+    filterLocation.appendChild(option);
+  });
+}
+
+function applyFilters() {
+  const locationValue = filterLocation.value.trim().toLowerCase();
+  const typeValue = filterType.value.trim();
+  const minPrice = Number(filterMinPrice.value) || 0;
+  const maxPrice = Number(filterMaxPrice.value) || Infinity;
+
+  filteredListings = allListings.filter((listing) => {
+    const matchesLocation = !locationValue || listing.locationSlug === locationValue;
+    const matchesType = !typeValue || listing.type === typeValue;
+    const matchesMin = listing.priceValue >= minPrice;
+    const matchesMax = listing.priceValue <= maxPrice;
+
+    return matchesLocation && matchesType && matchesMin && matchesMax;
+  });
+
+  applySort();
+}
+
+function applySort() {
+  const sortValue = sortOrder.value;
+
+  filteredListings.sort((a, b) => {
+    if (sortValue === "price-asc") {
+      return a.priceValue - b.priceValue;
+    }
+
+    if (sortValue === "price-desc") {
+      return b.priceValue - a.priceValue;
+    }
+
+    if (sortValue === "name-asc") {
+      return a.propertyName.localeCompare(b.propertyName);
+    }
+
+    return b.createdTime - a.createdTime;
+  });
+}
+
+function renderPagination(totalPages) {
+  paginationPages.innerHTML = "";
+  pagination.hidden = totalPages <= 1;
+
+  paginationPrev.disabled = currentPage === 1;
+  paginationNext.disabled = currentPage === totalPages;
+
+  for (let page = 1; page <= totalPages; page += 1) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = `pagination-page${page === currentPage ? " is-active" : ""}`;
+    button.textContent = String(page);
+    button.addEventListener("click", () => {
+      currentPage = page;
+      renderListingsPage();
+    });
+    paginationPages.appendChild(button);
+  }
+}
+
+function renderListingsPage() {
+  if (!filteredListings.length) {
+    showListingState("No listings match your filters right now. Try adjusting the filters or contact us directly.");
+    return;
+  }
+
+  const totalPages = Math.ceil(filteredListings.length / LISTINGS_PER_PAGE);
+  currentPage = Math.min(currentPage, totalPages);
+  const startIndex = (currentPage - 1) * LISTINGS_PER_PAGE;
+  const pageListings = filteredListings.slice(startIndex, startIndex + LISTINGS_PER_PAGE);
+
+  listingsGrid.innerHTML = "";
+  pageListings.forEach((listing) => {
+    listingsGrid.appendChild(createListingCard(listing));
+  });
+
+  const start = startIndex + 1;
+  const end = startIndex + pageListings.length;
+  resultsSummary.textContent = `Showing ${start}-${end} of ${filteredListings.length} active listings`;
+
+  listingsState.hidden = true;
+  listingsGrid.hidden = false;
+  renderPagination(totalPages);
+}
+
+function refreshFilteredListings(resetPage = true) {
+  if (resetPage) {
+    currentPage = 1;
+  }
+
+  applyFilters();
+  renderListingsPage();
 }
 
 function renderModalPhoto() {
@@ -321,71 +428,21 @@ async function fetchListings() {
     }
 
     const data = await response.json();
-    const listings = Array.isArray(data.records)
+    allListings = Array.isArray(data.records)
       ? data.records.map(normalizeListing).sort((a, b) => b.createdTime - a.createdTime)
       : [];
 
-    if (!listings.length) {
+    if (!allListings.length) {
       showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
       return;
     }
 
-    listingsGrid.innerHTML = "";
-    listings.slice(0, FEATURED_LISTINGS_LIMIT).forEach((listing) => {
-      listingsGrid.appendChild(createListingCard(listing));
-    });
-
-    listingsState.hidden = true;
-    listingsGrid.hidden = false;
+    populateLocationFilter(allListings);
+    refreshFilteredListings();
   } catch (error) {
     console.error("Unable to load Airtable listings:", error);
     showListingState("Unable to load listings right now. Please contact us directly.");
   }
-}
-
-function handleContactFormSubmit(event) {
-  event.preventDefault();
-
-  const formData = new FormData(contactForm);
-  const name = (formData.get("name") || "").toString().trim();
-  const phone = (formData.get("phone") || "").toString().trim();
-  const message = (formData.get("message") || "").toString().trim();
-
-  const composedMessage = [
-    "Hello Equity Merchants Ltd,",
-    "",
-    `Name: ${name}`,
-    `Phone: ${phone}`,
-    `Message: ${message}`
-  ].join("\n");
-
-  window.open(buildWhatsAppUrl(composedMessage), "_blank", "noopener");
-}
-
-function initRevealAnimations() {
-  const revealItems = document.querySelectorAll(".reveal");
-
-  if (!("IntersectionObserver" in window)) {
-    revealItems.forEach((item) => item.classList.add("is-visible"));
-    return;
-  }
-
-  const observer = new IntersectionObserver(
-    (entries, obs) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          entry.target.classList.add("is-visible");
-          obs.unobserve(entry.target);
-        }
-      });
-    },
-    {
-      threshold: 0.15,
-      rootMargin: "0px 0px -40px 0px"
-    }
-  );
-
-  revealItems.forEach((item) => observer.observe(item));
 }
 
 menuToggle.addEventListener("click", () => toggleMenu());
@@ -393,6 +450,29 @@ document.addEventListener("click", (event) => {
   const clickedInsideMenu = navLinks.contains(event.target) || menuToggle.contains(event.target);
   if (!clickedInsideMenu) {
     toggleMenu(true);
+  }
+});
+
+filterForm.addEventListener("input", () => refreshFilteredListings());
+sortOrder.addEventListener("change", () => refreshFilteredListings(false));
+filterReset.addEventListener("click", () => {
+  filterForm.reset();
+  sortOrder.value = "recent";
+  refreshFilteredListings();
+});
+
+paginationPrev.addEventListener("click", () => {
+  if (currentPage > 1) {
+    currentPage -= 1;
+    renderListingsPage();
+  }
+});
+
+paginationNext.addEventListener("click", () => {
+  const totalPages = Math.ceil(filteredListings.length / LISTINGS_PER_PAGE);
+  if (currentPage < totalPages) {
+    currentPage += 1;
+    renderListingsPage();
   }
 });
 
@@ -422,9 +502,6 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
-contactForm.addEventListener("submit", handleContactFormSubmit);
-
 closeMenuOnNavigate();
 setStaticWhatsAppLinks();
-initRevealAnimations();
 fetchListings();

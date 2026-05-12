@@ -36,9 +36,6 @@ export default {
     try {
       const endpoint = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}`);
       endpoint.searchParams.set("filterByFormula", "{Status}='Active'");
-      endpoint.searchParams.set("sort[0][field]", "Property Name");
-      endpoint.searchParams.set("sort[0][direction]", "asc");
-
       const airtableResponse = await fetch(endpoint.toString(), {
         headers: {
           Authorization: `Bearer ${env.AIRTABLE_API_KEY}`
@@ -83,6 +80,7 @@ function sanitizeRecord(record) {
 
   return {
     id: record.id,
+    createdTime: record.createdTime,
     fields: {
       "Property Name": fields["Property Name"] || fields.Name || "",
       Location: fields.Location || "",
