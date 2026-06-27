@@ -151,7 +151,8 @@ function sanitizeRecord(record) {
       Price: fields.Price || "",
       Type: fields.Type || "",
       Description: fields.Description || "",
-      Photo: photo
+      Photo: photo,
+      PhotoBase64: fields.PhotoBase64 || null
     }
   };
 }

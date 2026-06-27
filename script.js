@@ -247,13 +247,13 @@ function createListingCard(listing) {
       return;
     }
 
-    openListingModal(listing);
+    window.location.href = `detail.html?id=${listing.id}`;
   });
 
   card.addEventListener("keydown", (event) => {
     if (event.key === "Enter" || event.key === " ") {
       event.preventDefault();
-      openListingModal(listing);
+      window.location.href = `detail.html?id=${listing.id}`;
     }
   });
 
