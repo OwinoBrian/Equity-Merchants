@@ -21,16 +21,28 @@ function buildDetailUrl(recordId) {
   return `${base}?id=${recordId}`;
 }
 
+function findRecordById(data, recordId) {
+  if (data.record && data.record.id === recordId) {
+    return data.record;
+  }
+
+  if (!Array.isArray(data.records)) {
+    return null;
+  }
+
+  return data.records.find((item) => item && item.id === recordId) || null;
+}
+
 async function loadListing(recordId) {
   try {
     const response = await fetch(`${getWorkerUrl()}&action=get&id=${encodeURIComponent(recordId)}`);
     const data = await response.json();
+    const record = findRecordById(data, recordId);
 
-    if (!data.record) {
+    if (!response.ok || data.error || !record) {
       throw new Error('Listing not found');
     }
 
-    const record = data.record;
     const fields = record.fields || {};
     document.getElementById('property-name').value = fields['Property Name'] || '';
     document.getElementById('location').value = fields.Location || '';

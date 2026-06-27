@@ -79,6 +79,18 @@ function setShareMeta(imageUrl, title, description) {
   }
 }
 
+function findRecordById(data, recordId) {
+  if (data.record && data.record.id === recordId) {
+    return data.record;
+  }
+
+  if (!Array.isArray(data.records)) {
+    return null;
+  }
+
+  return data.records.find((item) => item && item.id === recordId) || null;
+}
+
 async function loadDetail() {
   const params = new URLSearchParams(window.location.search);
   const recordId = params.get('id');
@@ -109,10 +121,7 @@ async function loadDetail() {
 
     console.debug('Detail worker response', data);
 
-    let record = data.record || null;
-    if (!record && Array.isArray(data.records)) {
-      record = data.records.find((item) => item && item.id === recordId) || data.records[0] || null;
-    }
+    const record = findRecordById(data, recordId);
 
     if (!response.ok || data.error || !record) {
       const errorMessage = data.error || `Unable to load property${recordId ? ` (${recordId})` : ''}`;

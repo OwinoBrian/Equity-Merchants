@@ -1,4 +1,4 @@
-const CACHE_NAME = 'equity-merchants-v1';
+const CACHE_NAME = 'equity-merchants-v2';
 const APP_SHELL = [
   './',
   './index.html',
@@ -32,11 +32,29 @@ self.addEventListener('fetch', (event) => {
   if (event.request.method !== 'GET') return;
   if (event.request.url.includes('http') && !event.request.url.startsWith(self.location.origin)) return;
 
+  const requestUrl = new URL(event.request.url);
+  const isAppFile = /\.(?:html|css|js)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith('/');
+
   event.respondWith(
-    caches.match(event.request).then((cached) => cached || fetch(event.request).then((response) => {
-      const copy = response.clone();
-      caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+    caches.open(CACHE_NAME).then(async (cache) => {
+      if (isAppFile) {
+        try {
+          const response = await fetch(event.request);
+          cache.put(event.request, response.clone());
+          return response;
+        } catch (error) {
+          const cached = await cache.match(event.request);
+          if (cached) return cached;
+          throw error;
+        }
+      }
+
+      const cached = await cache.match(event.request);
+      if (cached) return cached;
+
+      const response = await fetch(event.request);
+      cache.put(event.request, response.clone());
       return response;
-    }))
+    })
   );
 });
