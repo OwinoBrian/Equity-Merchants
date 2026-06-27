@@ -117,10 +117,12 @@ export default {
 
 function buildAirtableFields(payload) {
   const photoUrls = Array.isArray(payload.photoUrls) ? payload.photoUrls : [];
+  const priceValue = String(payload.price || "").trim();
+  const numericPrice = Number(priceValue);
   const fields = {
     "Property Name": payload.propertyName || "",
     Location: payload.location || "",
-    Price: payload.price || "",
+    Price: priceValue && Number.isFinite(numericPrice) ? numericPrice : "",
     Type: payload.type || "House",
     Status: payload.status || "Active",
     Description: payload.description || "",
