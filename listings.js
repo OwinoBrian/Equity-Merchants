@@ -19,23 +19,6 @@ const pagination = document.getElementById("pagination");
 const paginationPrev = document.getElementById("pagination-prev");
 const paginationNext = document.getElementById("pagination-next");
 const paginationPages = document.getElementById("pagination-pages");
-const modal = document.getElementById("listing-modal");
-const modalClose = document.getElementById("modal-close");
-const modalCloseSecondary = document.getElementById("modal-close-secondary");
-const modalPrev = document.getElementById("modal-prev");
-const modalNext = document.getElementById("modal-next");
-const modalImage = document.getElementById("modal-image");
-const modalPlaceholder = document.getElementById("modal-placeholder");
-const modalThumbs = document.getElementById("modal-thumbs");
-const modalGalleryMain = document.querySelector(".modal-gallery-main");
-const modalTitle = document.getElementById("modal-title");
-const modalLocation = document.getElementById("modal-location");
-const modalPrice = document.getElementById("modal-price");
-const modalBadge = document.getElementById("modal-badge");
-const modalDescription = document.getElementById("modal-description");
-const modalWhatsapp = document.getElementById("modal-whatsapp");
-const modalDetails = document.getElementById("modal-details");
-
 let allListings = [];
 let filteredListings = [];
 let currentPage = 1;
@@ -374,110 +357,6 @@ function refreshFilteredListings(resetPage = true) {
   renderListingsPage();
 }
 
-function renderModalPhoto() {
-  if (!currentModalListing) {
-    return;
-  }
-
-  const photos = currentModalListing.photos;
-  const activePhoto = photos[currentModalPhotoIndex];
-
-  if (activePhoto && getModalPhotoUrl(activePhoto)) {
-    modalImage.hidden = false;
-    modalPlaceholder.hidden = true;
-    modalImage.src = getModalPhotoUrl(activePhoto);
-    modalImage.alt = currentModalListing.propertyName;
-  } else {
-    modalImage.hidden = true;
-    modalPlaceholder.hidden = false;
-    modalPlaceholder.textContent = currentModalListing.propertyName;
-  }
-
-  modalPrev.disabled = photos.length <= 1;
-  modalNext.disabled = photos.length <= 1;
-
-  modalThumbs.innerHTML = "";
-  photos.forEach((photo, index) => {
-    const thumbButton = document.createElement("button");
-    thumbButton.type = "button";
-    thumbButton.className = `modal-thumb${index === currentModalPhotoIndex ? " is-active" : ""}`;
-    thumbButton.setAttribute("aria-label", `View photo ${index + 1}`);
-    thumbButton.innerHTML = `<img src="${getThumbPhotoUrl(photo)}" alt="${currentModalListing.propertyName} thumbnail ${index + 1}" loading="lazy" decoding="async">`;
-    thumbButton.addEventListener("click", () => {
-      currentModalPhotoIndex = index;
-      renderModalPhoto();
-    });
-    modalThumbs.appendChild(thumbButton);
-  });
-}
-
-function openListingModal(listing) {
-  currentModalListing = listing;
-  currentModalPhotoIndex = 0;
-
-  modalTitle.textContent = listing.propertyName;
-  modalLocation.textContent = listing.location;
-  modalPrice.textContent = listing.price;
-  modalBadge.className = getBadgeClass(listing.type);
-  modalBadge.textContent = listing.type;
-  modalDescription.textContent = listing.description;
-  modalDetails.textContent = `${listing.photos.length || 0} photo${listing.photos.length === 1 ? "" : "s"} available`;
-  modalWhatsapp.href = buildWhatsAppUrl(`Hi, I am interested in ${listing.propertyName} listed on your website. Please share more details.`);
-
-  renderModalPhoto();
-  modal.hidden = false;
-  document.body.classList.add("modal-open");
-}
-
-function closeListingModal() {
-  modal.hidden = true;
-  document.body.classList.remove("modal-open");
-  currentModalListing = null;
-  currentModalPhotoIndex = 0;
-  modalImage.removeAttribute("src");
-  modalThumbs.innerHTML = "";
-}
-
-function changeModalPhoto(direction) {
-  if (!currentModalListing || currentModalListing.photos.length <= 1) {
-    return;
-  }
-
-  const total = currentModalListing.photos.length;
-  currentModalPhotoIndex = (currentModalPhotoIndex + direction + total) % total;
-  renderModalPhoto();
-}
-
-function handleTouchStart(event) {
-  if (!currentModalListing || currentModalListing.photos.length <= 1) {
-    return;
-  }
-
-  const touch = event.changedTouches[0];
-  touchStartX = touch.clientX;
-  touchStartY = touch.clientY;
-  touchInProgress = true;
-}
-
-function handleTouchEnd(event) {
-  if (!touchInProgress || !currentModalListing || currentModalListing.photos.length <= 1) {
-    touchInProgress = false;
-    return;
-  }
-
-  const touch = event.changedTouches[0];
-  const deltaX = touch.clientX - touchStartX;
-  const deltaY = touch.clientY - touchStartY;
-
-  touchInProgress = false;
-
-  if (Math.abs(deltaX) < 40 || Math.abs(deltaY) > Math.abs(deltaX) + 30) {
-    return;
-  }
-
-  changeModalPhoto(deltaX < 0 ? 1 : -1);
-}
-
 async function fetchListings() {
   if (LISTINGS_API_URL.includes("YOUR_")) {
     showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
@@ -553,32 +432,6 @@ window.addEventListener("resize", () => {
   }
 
   refreshFilteredListings(false);
-});
-
-modalClose.addEventListener("click", closeListingModal);
-modalCloseSecondary.addEventListener("click", closeListingModal);
-modalPrev.addEventListener("click", () => changeModalPhoto(-1));
-modalNext.addEventListener("click", () => changeModalPhoto(1));
-modalGalleryMain.addEventListener("touchstart", handleTouchStart, { passive: true });
-modalGalleryMain.addEventListener("touchend", handleTouchEnd, { passive: true });
-modal.addEventListener("click", (event) => {
-  if (event.target === modal) {
-    closeListingModal();
-  }
-});
-
-document.addEventListener("keydown", (event) => {
-  if (modal.hidden) {
-    return;
-  }
-
-  if (event.key === "Escape") {
-    closeListingModal();
-  } else if (event.key === "ArrowLeft") {
-    changeModalPhoto(-1);
-  } else if (event.key === "ArrowRight") {
-    changeModalPhoto(1);
-  }
 });
 
 closeMenuOnNavigate();
