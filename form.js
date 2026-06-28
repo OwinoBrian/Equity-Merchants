@@ -16,6 +16,20 @@ function setStatus(message, isError = false) {
   statusEl.style.color = isError ? '#c1121f' : '#25d366';
 }
 
+function getApiErrorMessage(data, fallback) {
+  const airtableError = data && data.details && data.details.error;
+
+  if (airtableError && airtableError.message) {
+    return airtableError.message;
+  }
+
+  if (data && data.details && typeof data.details === 'string') {
+    return data.details;
+  }
+
+  return data && data.error ? data.error : fallback;
+}
+
 function buildDetailUrl(recordId) {
   const base = `${window.location.origin}${window.location.pathname.replace(/form\.html$/, 'detail.html')}`;
   return `${base}?id=${recordId}`;
@@ -87,7 +101,10 @@ form.addEventListener('submit', async (event) => {
 
     const data = await response.json();
     if (!response.ok || data.error) {
-      throw new Error(data.error || 'Unable to save listing');
+      const error = new Error(getApiErrorMessage(data, 'Unable to save listing'));
+      error.isServerError = true;
+      error.details = data;
+      throw error;
     }
 
     const recordId = data.recordId || data.id;
@@ -96,8 +113,13 @@ form.addEventListener('submit', async (event) => {
     setStatus('Listing saved successfully. Share the link below.');
     window.history.replaceState({}, '', `form.html?id=${recordId}`);
   } catch (error) {
-    console.error(error);
-    // Save to pending queue for retry when offline / later
+    console.error('Unable to save listing:', error.details || error);
+
+    if (error.isServerError) {
+      setStatus(error.message, true);
+      return;
+    }
+
     savePendingSubmission(payload);
     setStatus('Saved locally — will retry when online.', false);
   }

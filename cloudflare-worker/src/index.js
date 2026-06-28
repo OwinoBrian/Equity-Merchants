@@ -65,18 +65,16 @@ export default {
       if (request.method === "POST") {
         const payload = await request.json().catch(() => ({}));
         const fields = buildAirtableFields(payload);
-        const body = JSON.stringify({ fields });
 
-        const airtableResponse = await fetch(endpoint, {
-          method: "POST",
-          headers: {
-            Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
-            "Content-Type": "application/json"
-          },
-          body
-        });
+        let airtableResponse = await createAirtableRecord(endpoint, env, fields);
+        let data = await airtableResponse.json().catch(() => ({}));
 
-        const data = await airtableResponse.json().catch(() => ({}));
+        if (!airtableResponse.ok && isUnknownFieldError(data, "PhotoBase64") && fields.PhotoBase64) {
+          delete fields.PhotoBase64;
+          airtableResponse = await createAirtableRecord(endpoint, env, fields);
+          data = await airtableResponse.json().catch(() => ({}));
+        }
+
         if (!airtableResponse.ok) {
           return jsonResponse({ error: "Unable to create Airtable record", details: data }, airtableResponse.status, corsHeaders);
         }
@@ -114,6 +112,24 @@ export default {
     }
   }
 };
+
+function createAirtableRecord(endpoint, env, fields) {
+  return fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ fields })
+  });
+}
+
+function isUnknownFieldError(data, fieldName) {
+  return data
+    && data.error
+    && data.error.type === "UNKNOWN_FIELD_NAME"
+    && String(data.error.message || "").includes(`"${fieldName}"`);
+}
 
 function buildAirtableFields(payload) {
   const photoUrls = Array.isArray(payload.photoUrls) ? payload.photoUrls : [];
