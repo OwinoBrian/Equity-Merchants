@@ -69,7 +69,7 @@ export default {
         let airtableResponse = await createAirtableRecord(endpoint, env, fields);
         let data = await airtableResponse.json().catch(() => ({}));
 
-        if (!airtableResponse.ok && isUnknownFieldError(data, "PhotoBase64") && fields.PhotoBase64) {
+        if (!airtableResponse.ok && isFieldError(data, "PhotoBase64") && fields.PhotoBase64) {
           delete fields.PhotoBase64;
           airtableResponse = await createAirtableRecord(endpoint, env, fields);
           data = await airtableResponse.json().catch(() => ({}));
@@ -124,10 +124,9 @@ function createAirtableRecord(endpoint, env, fields) {
   });
 }
 
-function isUnknownFieldError(data, fieldName) {
+function isFieldError(data, fieldName) {
   return data
     && data.error
-    && data.error.type === "UNKNOWN_FIELD_NAME"
     && String(data.error.message || "").includes(`"${fieldName}"`);
 }
 
