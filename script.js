@@ -39,7 +39,7 @@ function formatWhatsAppDisplay(number) {
 }
 
 function setStaticWhatsAppLinks() {
-  const genericMessage = "Hello Equity Merchants Ltd, I would like to learn more about your available properties and services.";
+  const genericMessage = getGenericWhatsAppMessage();
   const genericUrl = buildWhatsAppUrl(genericMessage);
   const displayNumber = formatWhatsAppDisplay(WHATSAPP_NUMBER);
 
@@ -112,7 +112,6 @@ function getBadgeClass(type) {
 
 function normalizeListing(record) {
   const fields = record.fields || {};
-  const photoField = Array.isArray(fields.Photo) ? fields.Photo : [];
 
   return {
     id: record.id,
@@ -123,13 +122,7 @@ function normalizeListing(record) {
     price: formatKES(fields.Price),
     type: fields.Type || "House",
     description: fields.Description || "Contact us for more information about this property.",
-    photos: photoField
-      .map((item) => ({
-        url: item.url,
-        cardUrl: item.cardUrl || item.url,
-        thumbUrl: item.thumbUrl || item.cardUrl || item.url
-      }))
-      .filter((item) => item.url || item.cardUrl || item.thumbUrl)
+    photos: parseListingPhotos(fields)
   };
 }
 
@@ -301,7 +294,7 @@ function handleContactFormSubmit(event) {
   const message = (formData.get("message") || "").toString().trim();
 
   const composedMessage = [
-    "Hello Equity Merchants Ltd,",
+    `Hello ${APP_CONFIG.siteName},`,
     "",
     `Name: ${name}`,
     `Phone: ${phone}`,

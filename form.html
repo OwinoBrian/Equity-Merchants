@@ -3,18 +3,18 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Property Form | Equity Merchants</title>
+  <title>Property Form</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="brand.css">
 </head>
-<body>
+<body data-page-title="Property Form | {shortName}">
   <header class="site-header">
     <div class="container nav-wrap">
-      <a href="index.html" class="logo" aria-label="Equity Merchants home">
-        <img class="logo-mark" data-brand-logo src="Equity Merchants.png" alt="Equity Merchants logo">
+      <a href="index.html" class="logo" data-brand-home-link aria-label="Home">
+        <img class="logo-mark" data-brand-logo src="" alt="">
       </a>
       <div class="nav-actions">
         <a class="btn btn-outline" href="index.html">Back to Website</a>
@@ -36,7 +36,7 @@
         <div class="card" style="padding: 1.5rem;">
           <form id="listing-form" class="contact-form">
             <input type="hidden" id="record-id" name="recordId">
-            <input type="hidden" id="business-id" name="businessId" value="equity-merchants">
+            <input type="hidden" id="business-id" name="businessId" data-brand-business-id value="">
 
             <div class="field">
               <label for="property-name">Property Name</label>
@@ -106,7 +106,8 @@
 
   <footer class="site-footer">
     <div class="container footer-bottom">
-      &copy; 2026 <span data-brand-site-name>Equity Merchants Ltd</span>. <span data-brand-credit>Built by Ujao Defined</span>.
+      &copy; 2026 <span data-brand-site-name></span>.
+      <a data-brand-credit-link href="#" target="_blank" rel="noopener noreferrer"></a>.
     </div>
   </footer>
 

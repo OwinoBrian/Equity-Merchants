@@ -1,7 +1,8 @@
 {
-  "name": "Equity Merchants Admin",
-  "short_name": "Equity Admin",
-  "description": "Installable admin app for managing Equity Merchants listings",
+  "_note": "Fallback only. admin.html generates the live manifest from config.js at runtime.",
+  "name": "Listings Admin",
+  "short_name": "Admin",
+  "description": "Installable admin app for managing property listings",
   "start_url": "./admin.html",
   "scope": "./",
   "display": "standalone",

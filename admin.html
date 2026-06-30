@@ -3,14 +3,14 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Equity Merchants Ltd | Listings Admin</title>
+  <title>Listings Admin</title>
   <meta name="robots" content="noindex, nofollow">
   <meta name="theme-color" content="#003049">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <link rel="manifest" href="manifest.json">
-  <link rel="icon" href="Equity Merchants.png">
-  <link rel="apple-touch-icon" href="Equity Merchants.png">
+  <link rel="icon" data-brand-icon href="">
+  <link rel="apple-touch-icon" data-brand-icon href="">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
@@ -20,11 +20,11 @@
   <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="brand.css">
 </head>
-<body>
+<body data-page-title="{adminAppName}">
   <header class="site-header">
     <div class="container nav-wrap">
-      <a href="index.html" class="logo" aria-label="Equity Merchants Ltd home">
-        <img class="logo-mark" src="Equity Merchants.png" alt="Equity Merchants Ltd logo">
+      <a href="index.html" class="logo" data-brand-home-link aria-label="Home">
+        <img class="logo-mark" data-brand-logo src="" alt="">
       </a>
       <div class="nav-actions">
         <a class="btn btn-outline" href="index.html">Back to Website</a>
@@ -56,7 +56,7 @@
             <a class="btn btn-outline" id="airtable-base-link" href="#" target="_blank" rel="noopener noreferrer">Open Full Airtable Base</a>
           </div>
           <div class="admin-note" id="admin-note">
-            Your links will appear here once they are connected in <code>admin.js</code>.
+            Your links will appear here once they are connected in <code>config.js</code>.
           </div>
         </article>
 
@@ -118,8 +118,8 @@
 
   <footer class="site-footer">
     <div class="container footer-bottom">
-      &copy; 2026 Equity Merchants Ltd. Built by
-      <a href="https://ujao-defined.com" target="_blank" rel="noopener noreferrer">Ujao Defined</a>.
+      &copy; 2026 <span data-brand-site-name></span>.
+      <a data-brand-credit-link href="#" target="_blank" rel="noopener noreferrer"></a>.
     </div>
   </footer>
 

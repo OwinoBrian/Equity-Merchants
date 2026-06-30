@@ -65,18 +65,23 @@ export default {
       if (request.method === "POST") {
         const payload = await request.json().catch(() => ({}));
         const fields = buildAirtableFields(payload);
+        const updateRecordId = String(payload.recordId || "").trim();
 
-        let airtableResponse = await createAirtableRecord(endpoint, env, fields);
+        let airtableResponse = updateRecordId
+          ? await patchAirtableRecord(updateRecordId, env, fields)
+          : await createAirtableRecord(endpoint, env, fields);
         let data = await airtableResponse.json().catch(() => ({}));
 
         if (!airtableResponse.ok && isFieldError(data, "PhotoBase64") && fields.PhotoBase64) {
           delete fields.PhotoBase64;
-          airtableResponse = await createAirtableRecord(endpoint, env, fields);
+          airtableResponse = updateRecordId
+            ? await patchAirtableRecord(updateRecordId, env, fields)
+            : await createAirtableRecord(endpoint, env, fields);
           data = await airtableResponse.json().catch(() => ({}));
         }
 
         if (!airtableResponse.ok) {
-          return jsonResponse({ error: "Unable to create Airtable record", details: data }, airtableResponse.status, corsHeaders);
+          return jsonResponse({ error: updateRecordId ? "Unable to update Airtable record" : "Unable to create Airtable record", details: data }, airtableResponse.status, corsHeaders);
         }
 
         return jsonResponse({ recordId: data.id, record: sanitizeRecord(data) }, 200, corsHeaders);
@@ -116,6 +121,17 @@ export default {
 function createAirtableRecord(endpoint, env, fields) {
   return fetch(endpoint, {
     method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ fields })
+  });
+}
+
+function patchAirtableRecord(recordId, env, fields) {
+  return fetch(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}/${recordId}`, {
+    method: "PATCH",
     headers: {
       Authorization: `Bearer ${env.AIRTABLE_API_KEY}`,
       "Content-Type": "application/json"

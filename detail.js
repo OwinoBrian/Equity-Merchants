@@ -12,7 +12,7 @@ function setShareMeta(imageUrl, title, description) {
   const titleText = title || 'Property Details';
   const descriptionText = description || 'View this property listing and photos.';
 
-  document.title = `${titleText} | Equity Merchants`;
+  document.title = `${titleText} | ${APP_CONFIG.shortName}`;
 
   const setMeta = (selector, attr, value) => {
     let element = document.querySelector(selector);
@@ -130,18 +130,7 @@ async function loadDetail() {
     }
 
     const fields = record.fields || {};
-    let photos = Array.isArray(fields.Photo) ? fields.Photo : [];
-    // If no attachments, check for PhotoBase64 (stored as JSON string)
-    if ((!photos || !photos.length) && fields.PhotoBase64) {
-      try {
-        const baseList = typeof fields.PhotoBase64 === 'string' ? JSON.parse(fields.PhotoBase64) : fields.PhotoBase64;
-        if (Array.isArray(baseList) && baseList.length) {
-          photos = baseList.map((dataUrl) => ({ url: dataUrl }));
-        }
-      } catch (e) {
-        // ignore parse errors
-      }
-    }
+    let photos = parseListingPhotos(fields);
 
     const listingTitle = fields['Property Name'] || 'Property';
     const listingDescription = fields.Description || 'No description available.';

@@ -35,6 +35,85 @@ function buildDetailUrl(recordId) {
   return `${base}?id=${recordId}`;
 }
 
+function renderPhotoPreviews(dataUrls) {
+  if (!previewsEl) {
+    return;
+  }
+
+  previewsEl.innerHTML = '';
+  dataUrls.forEach((dataUrl) => {
+    const img = document.createElement('img');
+    img.src = dataUrl;
+    img.alt = 'Uploaded photo preview';
+    img.style.width = '100%';
+    img.style.borderRadius = '8px';
+    img.style.objectFit = 'cover';
+
+    const holder = document.createElement('div');
+    holder.style.minHeight = '80px';
+    holder.appendChild(img);
+    previewsEl.appendChild(holder);
+  });
+}
+
+function compressImageFile(file, maxDimension = 1200, quality = 0.82) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      const img = new Image();
+      img.onload = () => {
+        let { width, height } = img;
+        const scale = Math.min(1, maxDimension / Math.max(width, height));
+        width = Math.round(width * scale);
+        height = Math.round(height * scale);
+
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => reject(new Error(`Unable to process ${file.name}`));
+      img.src = reader.result;
+    };
+    reader.onerror = () => reject(new Error(`Unable to read ${file.name}`));
+    reader.readAsDataURL(file);
+  });
+}
+
+async function processSelectedPhotos(files) {
+  const selectedFiles = Array.from(files || []).slice(0, 10);
+  photoData = [];
+
+  if (!selectedFiles.length) {
+    renderPhotoPreviews([]);
+    return;
+  }
+
+  setStatus('Processing photos...');
+
+  for (const file of selectedFiles) {
+    try {
+      photoData.push(await compressImageFile(file));
+    } catch (error) {
+      console.error(error);
+      setStatus(`Could not process ${file.name}. Try a smaller image.`, true);
+      return;
+    }
+  }
+
+  const payloadSize = JSON.stringify(photoData).length;
+  if (payloadSize > 90000) {
+    photoData = [];
+    renderPhotoPreviews([]);
+    setStatus('Photos are too large after compression. Upload fewer images or use photo URLs instead.', true);
+    return;
+  }
+
+  renderPhotoPreviews(photoData);
+  setStatus(`${photoData.length} photo${photoData.length === 1 ? '' : 's'} ready to upload.`);
+}
+
 function findRecordById(data, recordId) {
   if (data.record && data.record.id === recordId) {
     return data.record;
@@ -64,7 +143,13 @@ async function loadListing(recordId) {
     document.getElementById('type').value = fields.Type || 'House';
     document.getElementById('status').value = fields.Status || 'Active';
     document.getElementById('description').value = fields.Description || '';
-    document.getElementById('photo-urls').value = Array.isArray(fields.Photo) ? fields.Photo.map((photo) => photo.url || '').filter(Boolean).join('\n') : '';
+    document.getElementById('photo-urls').value = Array.isArray(fields.Photo)
+      ? fields.Photo.map((photo) => photo.url || '').filter(Boolean).join('\n')
+      : '';
+    photoData = parseListingPhotos(fields)
+      .map((photo) => photo.url)
+      .filter((url) => typeof url === 'string' && url.startsWith('data:'));
+    renderPhotoPreviews(photoData);
     recordIdEl.value = record.id;
     shareLinkEl.value = buildDetailUrl(record.id);
     businessIdEl.value = fields['Business ID'] || APP_CONFIG.businessId;
@@ -129,33 +214,10 @@ if (editId) {
   loadListing(editId);
 }
 
-// File input handling: create previews and read data URLs
+// File input handling: compress, preview, and store data URLs
 if (fileInput) {
-  fileInput.addEventListener('change', (e) => {
-    const files = Array.from(e.target.files || []);
-    previewsEl.innerHTML = '';
-    photoData = [];
-
-    files.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target.result;
-        photoData.push(dataUrl);
-
-        const img = document.createElement('img');
-        img.src = dataUrl;
-        img.alt = file.name || 'preview';
-        img.style.width = '100%';
-        img.style.borderRadius = '8px';
-        img.style.objectFit = 'cover';
-
-        const holder = document.createElement('div');
-        holder.style.minHeight = '80px';
-        holder.appendChild(img);
-        previewsEl.appendChild(holder);
-      };
-      reader.readAsDataURL(file);
-    });
+  fileInput.addEventListener('change', (event) => {
+    processSelectedPhotos(event.target.files);
   });
 }
 

@@ -1,4 +1,6 @@
-const CACHE_NAME = 'equity-merchants-v2';
+importScripts('./config.js');
+
+const CACHE_NAME = `${APP_CONFIG.businessId}-v3`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -15,7 +17,7 @@ const APP_SHELL = [
   './detail.js',
   './admin.js',
   './manifest.json',
-  './Equity Merchants.png'
+  `./${APP_CONFIG.logoSrc}`
 ];
 
 self.addEventListener('install', (event) => {
