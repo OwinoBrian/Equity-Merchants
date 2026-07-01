@@ -5,8 +5,11 @@ const recordIdEl = document.getElementById('record-id');
 const businessIdEl = document.getElementById('business-id');
 const fileInput = document.getElementById('photo-files');
 const previewsEl = document.getElementById('photo-previews');
+const submitButton = form ? form.querySelector('button[type="submit"]') : null;
 
-let photoData = [];
+let selectedPhotoFiles = [];
+let selectedPhotoUrls = [];
+let isSaving = false;
 
 const params = new URLSearchParams(window.location.search);
 const editId = params.get('id');
@@ -35,19 +38,60 @@ function buildDetailUrl(recordId) {
   return `${base}?id=${recordId}`;
 }
 
-function renderPhotoPreviews(dataUrls) {
+function getUploadUrl() {
+  const url = new URL(getWorkerBaseUrl());
+  url.pathname = '/api/upload';
+  return url.toString();
+}
+
+function setBusyState(busy) {
+  isSaving = busy;
+
+  if (submitButton) {
+    submitButton.disabled = busy;
+  }
+
+  if (fileInput) {
+    fileInput.disabled = busy;
+  }
+}
+
+function dedupePhotoUrls(urls) {
+  return [...new Set((urls || []).map((item) => String(item || '').trim()).filter(Boolean))];
+}
+
+function normalizePhotoUrls(value) {
+  if (Array.isArray(value)) {
+    return value.map((item) => String(item || '').trim()).filter(Boolean);
+  }
+
+  if (typeof value === 'string') {
+    return value.split(/\r?\n|,/).map((item) => item.trim()).filter(Boolean);
+  }
+
+  return [];
+}
+
+function renderPhotoPreviews(srcs) {
   if (!previewsEl) {
     return;
   }
 
   previewsEl.innerHTML = '';
-  dataUrls.forEach((dataUrl) => {
+  srcs.forEach((src) => {
     const img = document.createElement('img');
-    img.src = dataUrl;
+    img.src = src;
     img.alt = 'Uploaded photo preview';
     img.style.width = '100%';
     img.style.borderRadius = '8px';
     img.style.objectFit = 'cover';
+    img.loading = 'lazy';
+
+    if (src.startsWith('blob:')) {
+      img.addEventListener('load', () => {
+        URL.revokeObjectURL(src);
+      }, { once: true });
+    }
 
     const holder = document.createElement('div');
     holder.style.minHeight = '80px';
@@ -56,62 +100,72 @@ function renderPhotoPreviews(dataUrls) {
   });
 }
 
-function compressImageFile(file, maxDimension = 1200, quality = 0.82) {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const img = new Image();
-      img.onload = () => {
-        let { width, height } = img;
-        const scale = Math.min(1, maxDimension / Math.max(width, height));
-        width = Math.round(width * scale);
-        height = Math.round(height * scale);
+function clearSelectedPhotos() {
+  selectedPhotoFiles = [];
+  selectedPhotoUrls = [];
 
-        const canvas = document.createElement('canvas');
-        canvas.width = width;
-        canvas.height = height;
-        canvas.getContext('2d').drawImage(img, 0, 0, width, height);
-        resolve(canvas.toDataURL('image/jpeg', quality));
-      };
-      img.onerror = () => reject(new Error(`Unable to process ${file.name}`));
-      img.src = reader.result;
-    };
-    reader.onerror = () => reject(new Error(`Unable to read ${file.name}`));
-    reader.readAsDataURL(file);
-  });
+  if (fileInput) {
+    fileInput.value = '';
+  }
+
+  renderPhotoPreviews([]);
 }
 
-async function processSelectedPhotos(files) {
-  const selectedFiles = Array.from(files || []).slice(0, 10);
-  photoData = [];
+function setSelectedPhotoFiles(files) {
+  selectedPhotoFiles = Array.from(files || []).slice(0, 10);
 
-  if (!selectedFiles.length) {
-    renderPhotoPreviews([]);
+  if (!selectedPhotoFiles.length) {
+    selectedPhotoUrls = [];
+    const existingPhotoUrls = normalizePhotoUrls(document.getElementById('photo-urls')?.value || '');
+    renderPhotoPreviews(existingPhotoUrls);
+    setStatus(existingPhotoUrls.length ? `${existingPhotoUrls.length} saved photo${existingPhotoUrls.length === 1 ? '' : 's'} ready.` : 'No images selected.');
     return;
   }
 
-  setStatus('Processing photos...');
+  selectedPhotoUrls = selectedPhotoFiles.map((file) => URL.createObjectURL(file));
+  renderPhotoPreviews(selectedPhotoUrls);
 
-  for (const file of selectedFiles) {
-    try {
-      photoData.push(await compressImageFile(file));
-    } catch (error) {
-      console.error(error);
-      setStatus(`Could not process ${file.name}. Try a smaller image.`, true);
-      return;
-    }
+  const count = selectedPhotoFiles.length;
+  const label = count === 1 ? 'image' : 'images';
+  setStatus(`${count} ${label} selected. They will upload when you save.`);
+}
+
+async function uploadPhotoFile(file, index, total) {
+  const formData = new FormData();
+  formData.append('photoFile', file, file.name);
+
+  setStatus(`Uploading image ${index} of ${total}...`);
+
+  const response = await fetch(getUploadUrl(), {
+    method: 'POST',
+    body: formData
+  });
+
+  const data = await response.json().catch(() => ({}));
+  if (!response.ok || data.error) {
+    const error = new Error(getApiErrorMessage(data, 'Unable to upload image'));
+    error.isServerError = true;
+    error.details = data;
+    throw error;
   }
 
-  const payloadSize = JSON.stringify(photoData).length;
-  if (payloadSize > 90000) {
-    photoData = [];
-    renderPhotoPreviews([]);
-    setStatus('Photos are too large after compression. Upload fewer images or use photo URLs instead.', true);
-    return;
+  if (!data.url) {
+    throw new Error('Upload succeeded but no image URL was returned.');
   }
 
-  renderPhotoPreviews(photoData);
-  setStatus(`${photoData.length} photo${photoData.length === 1 ? '' : 's'} ready to upload.`);
+  return data.url;
+}
+
+async function uploadSelectedPhotos(files) {
+  const uploadedUrls = [];
+  const selectedFiles = Array.from(files || []);
+
+  for (let index = 0; index < selectedFiles.length; index += 1) {
+    const file = selectedFiles[index];
+    uploadedUrls.push(await uploadPhotoFile(file, index + 1, selectedFiles.length));
+  }
+
+  return uploadedUrls;
 }
 
 function findRecordById(data, recordId) {
@@ -143,13 +197,13 @@ async function loadListing(recordId) {
     document.getElementById('type').value = fields.type || 'House';
     document.getElementById('status').value = fields.status || APP_CONFIG.activeListingStatus;
     document.getElementById('description').value = fields.description || '';
-    document.getElementById('photo-urls').value = Array.isArray(fields.photo)
-      ? fields.photo.map((photo) => photo.url || '').filter(Boolean).join('\n')
-      : '';
-    photoData = parseListingPhotos(fields)
-      .map((photo) => photo.url)
-      .filter((url) => typeof url === 'string' && url.startsWith('data:'));
-    renderPhotoPreviews(photoData);
+    const existingPhotoUrls = parseListingPhotos(fields)
+      .map((photo) => photo.url || '')
+      .filter(Boolean);
+    document.getElementById('photo-urls').value = existingPhotoUrls.join('\n');
+    selectedPhotoFiles = [];
+    selectedPhotoUrls = [];
+    renderPhotoPreviews(existingPhotoUrls);
     recordIdEl.value = record.id;
     shareLinkEl.value = buildDetailUrl(record.id);
     businessIdEl.value = fields.businessId || APP_CONFIG.businessId;
@@ -161,9 +215,17 @@ async function loadListing(recordId) {
 
 form.addEventListener('submit', async (event) => {
   event.preventDefault();
+
+  if (isSaving) {
+    return;
+  }
+
+  setBusyState(true);
   setStatus('Saving listing...');
 
   const formData = new FormData(form);
+  const manualPhotoUrls = normalizePhotoUrls(formData.get('photoUrls'));
+  let uploadedPhotoUrls = [];
   const payload = {
     recordId: formData.get('recordId') || '',
     businessId: formData.get('businessId') || APP_CONFIG.businessId,
@@ -173,11 +235,17 @@ form.addEventListener('submit', async (event) => {
     type: formData.get('type') || 'House',
     status: formData.get('status') || APP_CONFIG.activeListingStatus,
     description: formData.get('description') || '',
-    photoUrls: (formData.get('photoUrls') || '').split(/\n|,/).map((item) => item.trim()).filter(Boolean),
-    photoData: photoData.slice()
+    photoUrls: []
   };
 
   try {
+    if (selectedPhotoFiles.length) {
+      uploadedPhotoUrls = await uploadSelectedPhotos(selectedPhotoFiles);
+    }
+
+    payload.photoUrls = dedupePhotoUrls([...manualPhotoUrls, ...uploadedPhotoUrls]);
+    setStatus('Saving listing details...');
+
     const response = await fetch(getWorkerUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -195,6 +263,12 @@ form.addEventListener('submit', async (event) => {
     const recordId = data.recordId || data.id;
     shareLinkEl.value = buildDetailUrl(recordId);
     recordIdEl.value = recordId;
+    selectedPhotoFiles = [];
+    selectedPhotoUrls = [];
+    if (fileInput) {
+      fileInput.value = '';
+    }
+    renderPhotoPreviews(payload.photoUrls);
     setStatus('Listing saved successfully. Share the link below.');
     window.history.replaceState({}, '', `form.html?id=${recordId}`);
   } catch (error) {
@@ -202,11 +276,14 @@ form.addEventListener('submit', async (event) => {
 
     if (error.isServerError) {
       setStatus(error.message, true);
+      setBusyState(false);
       return;
     }
 
     savePendingSubmission(payload);
-    setStatus('Saved locally — will retry when online.', false);
+    setStatus('Saved locally - will retry when online.', false);
+  } finally {
+    setBusyState(false);
   }
 });
 
@@ -214,10 +291,10 @@ if (editId) {
   loadListing(editId);
 }
 
-// File input handling: compress, preview, and store data URLs
+// File input handling: preview selected images and upload them on submit
 if (fileInput) {
   fileInput.addEventListener('change', (event) => {
-    processSelectedPhotos(event.target.files);
+    setSelectedPhotoFiles(event.target.files);
   });
 }
 
@@ -265,3 +342,4 @@ async function retryPendingSubmissions() {
 }
 
 window.addEventListener('online', retryPendingSubmissions);
+

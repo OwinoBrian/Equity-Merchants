@@ -3,6 +3,7 @@
 
 # Wrangler local state
 /cloudflare-worker/.wrangler/
+/cloudflare-worker/.dev.vars
 
 # OS / editor files
 .DS_Store

@@ -1,6 +1,6 @@
 # Equity Merchants
 
-A real estate listings site built with a GitHub Pages frontend and a Cloudflare Worker proxy for Airtable data.
+A real estate listings site built with a Cloudflare Pages frontend and a Cloudflare Worker proxy for Airtable data.
 
 ## Built with
 
@@ -8,8 +8,8 @@ A real estate listings site built with a GitHub Pages frontend and a Cloudflare 
 - CSS
 - JavaScript
 - Cloudflare Workers
+- Cloudflare Pages
 - Airtable
-- GitHub Pages
 
 ## Branding and client configuration
 
@@ -26,8 +26,62 @@ To customize for a client fork, update `config.js` and `brand.css` only.
 
 This site is now set up to use:
 
-- GitHub Pages for the frontend
+- Cloudflare Pages for the frontend
 - Cloudflare Workers for the secure Airtable proxy
+
+## Working Modes
+
+There are 3 ways to work with this repo:
+
+1. Local development
+   - Use `wrangler dev` in `cloudflare-worker`
+   - Open the frontend from your local web server, for example:
+   ```bash
+   python -m http.server 5173
+   ```
+   - The app automatically uses the local worker URL from `config.js`
+   - Copy `cloudflare-worker/.dev.vars.example` to `cloudflare-worker/.dev.vars`
+   - Make sure `ALLOWED_ORIGIN` in `.dev.vars` matches the port you used
+
+2. Cloudflare Pages preview
+   - Open the preview URL that Cloudflare gives you after a Pages deploy
+   - The frontend automatically detects the `*.pages.dev` hostname
+   - It uses the preview/production worker URL from `config.js`
+
+3. Production
+   - Open your live custom domain
+   - The frontend automatically uses the production worker URL from `config.js`
+   - Update `ALLOWED_ORIGIN` in `cloudflare-worker/wrangler.toml` if your live domain changes
+
+Important:
+
+- `config.js` is the one file that decides which worker URL to use
+- local uses `http://127.0.0.1:8787`
+- preview and production should point to your deployed worker URL
+- if you add a second worker later for preview, you can set a different preview URL in `config.js`
+- if you change your local static server port, update `ALLOWED_ORIGIN` in `cloudflare-worker/.dev.vars`
+
+## Quick Checklist
+
+Use this when switching environments:
+
+1. Local dev
+   - `cd cloudflare-worker`
+   - copy `.dev.vars.example` to `.dev.vars`
+   - fill in Airtable, R2, and local origin values
+   - run `wrangler dev`
+   - serve the frontend locally on the same origin you added to `ALLOWED_ORIGIN`
+
+2. Cloudflare Pages preview
+   - deploy the repo to Pages
+   - open the `*.pages.dev` preview URL
+   - set `workerBaseUrls.preview` in `config.js` to your worker URL
+   - make sure `ALLOWED_ORIGIN` includes the Pages preview domain
+
+3. Production
+   - deploy the worker with `wrangler deploy`
+   - set `workerBaseUrls.production` in `config.js` to the live worker URL
+   - make sure `ALLOWED_ORIGIN` includes your live custom domain
 
 ## 1. Prepare Airtable
 
@@ -82,10 +136,8 @@ wrangler login
 
 Examples:
 
-- GitHub Pages project site:
-  `https://YOUR_GITHUB_USERNAME.github.io`
-- GitHub Pages repository site:
-  `https://YOUR_GITHUB_USERNAME.github.io`
+- Cloudflare Pages preview site:
+  `https://YOUR-PROJECT.pages.dev`
 - Custom domain:
   `https://www.equitymerchants.co.ke`
 
@@ -115,44 +167,57 @@ After deploy, Cloudflare will give you a Worker URL like:
 https://equity-merchants-listings.YOUR-SUBDOMAIN.workers.dev
 ```
 
-## 4. Connect the frontend to the Worker
+## 4. Image Storage (Cloudflare R2)
 
-Open `script.js` and replace:
+Create the image bucket:
 
-```js
-const LISTINGS_API_URL = "YOUR_CLOUDFLARE_WORKER_URL_HERE";
+```bash
+cd cloudflare-worker
+wrangler r2 bucket create equity-merchants-images
 ```
 
-with your real Worker URL, for example:
+Then enable public access for the bucket in the Cloudflare dashboard and copy the public base URL. Add that URL to `R2_PUBLIC_URL` in `cloudflare-worker/wrangler.toml`, and copy `cloudflare-worker/.dev.vars.example` to `cloudflare-worker/.dev.vars` for local development.
 
-```js
-const LISTINGS_API_URL = "https://equity-merchants-listings.example.workers.dev";
-```
+Important:
 
-## 5. Publish the frontend to GitHub Pages
+- the R2 bucket binding must be named `LISTINGS_IMAGES`
+- the Airtable `Photo` field must be changed from `Attachment` to `Single line text` or `URL`
+- the Worker stores photo URLs as plain text, so Airtable attachments will not work for this flow
 
-1. Push this repository to GitHub.
-2. In the GitHub repository, open `Settings > Pages`.
-3. Under `Build and deployment`, choose:
-   - Source: `Deploy from a branch`
-   - Branch: `main`
-   - Folder: `/ (root)`
-4. Save.
+For local development, copy `cloudflare-worker/.dev.vars.example` to `cloudflare-worker/.dev.vars` and fill in your real values.
 
-GitHub Pages will publish your site at:
+## 5. Connect the frontend to the Worker
+
+Open `config.js` and update `workerBaseUrls`:
+
+- `local` should point at your local `wrangler dev` worker, usually `http://127.0.0.1:8787`
+- `preview` should point at your deployed worker URL or a preview-specific worker if you use one
+- `production` should point at your live deployed worker URL
+
+The app will choose the right one automatically based on where it is running.
+
+## 6. Publish the frontend to Cloudflare Pages
+
+1. In Cloudflare, open `Workers & Pages > Pages`.
+2. Create a new Pages project and connect this repository.
+3. Set the build settings:
+   - Build command: leave empty
+   - Build output directory: `/`
+4. Deploy.
+
+Cloudflare Pages will publish your site at:
 
 ```text
-https://YOUR_GITHUB_USERNAME.github.io/REPOSITORY_NAME/
+https://YOUR-PROJECT.pages.dev
 ```
 
-## 6. If you use a custom domain
+## 7. If you use a custom domain
 
-1. Buy the domain from a registrar.
-2. In GitHub Pages settings, add the custom domain.
-3. Update your DNS records as GitHub instructs.
-4. If your site origin changes, update `ALLOWED_ORIGIN` in `cloudflare-worker/wrangler.toml` and run `wrangler deploy` again.
+1. Add the custom domain in the Cloudflare Pages project.
+2. Update DNS in Cloudflare if prompted.
+3. If your site origin changes, update `ALLOWED_ORIGIN` in `cloudflare-worker/wrangler.toml` and run `wrangler deploy` again.
 
-## 7. Test everything
+## 8. Test everything
 
 After deployment:
 
@@ -161,8 +226,12 @@ After deployment:
 3. Confirm listings load.
 4. Confirm only `Active` listings appear.
 5. Confirm cards still work when a listing has no image.
+6. Open `form.html`, choose multiple image files, and save a new listing.
+7. Confirm the saved listing appears in Airtable as plain text URLs in the `Photo` field.
+8. Open the detail page and confirm the gallery shows the uploaded images.
+9. Use `wrangler tail` while testing if you need to inspect upload or save errors.
 
-## 8. Set up the client admin page
+## 9. Set up the client admin page
 
 This project now includes `admin.html`, which is a simple client-facing management page.
 
@@ -184,6 +253,7 @@ Recommended Airtable setup:
 
 - Do not put the Airtable token in `script.js`.
 - Keep the Airtable token only in the Worker secret.
+- If the `Photo` field is still set to `Attachment`, uploads will not save correctly. Change it to text first.
 - If listings fail, open browser dev tools and also run:
 
 ```bash

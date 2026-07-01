@@ -18,7 +18,11 @@ const APP_CONFIG = {
   logoAlt: "Equity Merchants Ltd logo",
   faviconSrc: "Equity Merchants.png",
   themeColor: "#003049",
-  workerBaseUrl: "https://equity-merchants-listings.ujao.workers.dev",
+  workerBaseUrls: {
+    local: "http://127.0.0.1:8787",
+    preview: "https://equity-merchants-listings.YOUR-SUBDOMAIN.workers.dev",
+    production: "https://equity-merchants-listings.YOUR-SUBDOMAIN.workers.dev"
+  },
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",
   airtableEditorUrl: "https://airtable.com/appwFq9FXqtf2cV6B/tbl7SBcj3I3jc0QbU",
@@ -39,6 +43,20 @@ const APP_CONFIG = {
   }
 };
 
+function getRuntimeEnvironment() {
+  const hostname = window.location.hostname.toLowerCase();
+
+  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
+    return "local";
+  }
+
+  if (hostname.endsWith(".pages.dev")) {
+    return "preview";
+  }
+
+  return "production";
+}
+
 function getFieldConfigPayload() {
   return {
     fields: APP_CONFIG.airtableFields,
@@ -46,8 +64,13 @@ function getFieldConfigPayload() {
   };
 }
 
+function getWorkerBaseUrl() {
+  const runtime = getRuntimeEnvironment();
+  return APP_CONFIG.workerBaseUrls[runtime] || APP_CONFIG.workerBaseUrls.production;
+}
+
 function getWorkerUrl() {
-  const url = new URL(APP_CONFIG.workerBaseUrl);
+  const url = new URL(getWorkerBaseUrl());
   url.searchParams.set("businessId", APP_CONFIG.businessId);
   url.searchParams.set("fieldConfig", JSON.stringify(getFieldConfigPayload()));
   return url.toString();
@@ -90,13 +113,76 @@ function normalizeApiFields(fields) {
     status: fields[map.status] || "",
     description: fields[map.description] || "",
     businessId: fields[map.businessId] || "",
-    photo: Array.isArray(photoField) ? photoField : [],
+    photo: photoField || "",
     photoBase64: fields[map.photoBase64] || null
   };
 }
 
 function parseListingPhotos(fields) {
-  let photos = Array.isArray(fields.photo) ? fields.photo : [];
+  const toPhotoObject = (value) => {
+    const url = String(value || "").trim();
+    if (!url) {
+      return null;
+    }
+
+    return {
+      url,
+      cardUrl: url,
+      thumbUrl: url
+    };
+  };
+
+  let photos = [];
+
+  if (Array.isArray(fields.photo)) {
+    photos = fields.photo
+      .map((item) => {
+        if (!item) {
+          return null;
+        }
+
+        if (typeof item === "string") {
+          return toPhotoObject(item);
+        }
+
+        if (typeof item === "object") {
+          const url = item.url || item.cardUrl || item.thumbUrl || "";
+          return {
+            url,
+            cardUrl: item.cardUrl || url,
+            thumbUrl: item.thumbUrl || item.cardUrl || url
+          };
+        }
+
+        return null;
+      })
+      .filter(Boolean);
+  } else if (typeof fields.photo === "string") {
+    const raw = fields.photo.trim();
+
+    if (raw) {
+      try {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) {
+          photos = parsed.map((item) => toPhotoObject(item)).filter(Boolean);
+        }
+      } catch (error) {
+        photos = raw
+          .split(/\r?\n|,/)
+          .map((item) => toPhotoObject(item))
+          .filter(Boolean);
+      }
+    }
+  } else if (fields.photo && typeof fields.photo === "object") {
+    const url = fields.photo.url || fields.photo.cardUrl || fields.photo.thumbUrl || "";
+    if (url) {
+      photos = [{
+        url,
+        cardUrl: fields.photo.cardUrl || url,
+        thumbUrl: fields.photo.thumbUrl || fields.photo.cardUrl || url
+      }];
+    }
+  }
 
   if ((!photos || !photos.length) && fields.photoBase64) {
     try {

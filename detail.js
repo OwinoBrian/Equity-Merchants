@@ -11,62 +11,37 @@ function setShareMeta(imageUrl, title, description) {
   const canonicalUrl = window.location.href;
   const titleText = title || 'Property Details';
   const descriptionText = description || 'View this property listing and photos.';
+  const previewWidth = '1200';
+  const previewHeight = '630';
 
   document.title = `${titleText} | ${APP_CONFIG.shortName}`;
 
-  const setMeta = (selector, attr, value) => {
+  const ensureMeta = (selector, attribute) => {
     let element = document.querySelector(selector);
     if (!element) {
       element = document.createElement('meta');
-      element.setAttribute(attr === 'name' ? 'name' : 'property', selector.includes('twitter') ? 'twitter:image' : 'og:image');
+      const match = selector.match(/\[(?:property|name)="([^"]+)"\]/);
+      const name = match ? match[1] : '';
+      if (attribute === 'property') {
+        element.setAttribute('property', name);
+      } else {
+        element.setAttribute('name', name);
+      }
       document.head.appendChild(element);
     }
-    if (attr === 'name') {
-      element.setAttribute('name', selector.replace('meta[name="', '').replace('"]', ''));
-    } else {
-      element.setAttribute(attr, value);
-    }
+    return element;
   };
 
-  const ogImage = document.querySelector('meta[property="og:image"]');
-  if (ogImage) {
-    ogImage.setAttribute('content', imageUrl || '');
-  } else {
-    const meta = document.createElement('meta');
-    meta.setAttribute('property', 'og:image');
-    meta.setAttribute('content', imageUrl || '');
-    document.head.appendChild(meta);
-  }
-
-  const twitterImage = document.querySelector('meta[name="twitter:image"]');
-  if (twitterImage) {
-    twitterImage.setAttribute('content', imageUrl || '');
-  } else {
-    const meta = document.createElement('meta');
-    meta.setAttribute('name', 'twitter:image');
-    meta.setAttribute('content', imageUrl || '');
-    document.head.appendChild(meta);
-  }
-
-  const ogTitle = document.querySelector('meta[property="og:title"]');
-  if (ogTitle) {
-    ogTitle.setAttribute('content', titleText);
-  }
-
-  const ogDescription = document.querySelector('meta[property="og:description"]');
-  if (ogDescription) {
-    ogDescription.setAttribute('content', descriptionText);
-  }
-
-  const twitterTitle = document.querySelector('meta[name="twitter:title"]');
-  if (twitterTitle) {
-    twitterTitle.setAttribute('content', titleText);
-  }
-
-  const twitterDescription = document.querySelector('meta[name="twitter:description"]');
-  if (twitterDescription) {
-    twitterDescription.setAttribute('content', descriptionText);
-  }
+  ensureMeta('meta[property="og:title"]', 'property').setAttribute('content', titleText);
+  ensureMeta('meta[property="og:description"]', 'property').setAttribute('content', descriptionText);
+  ensureMeta('meta[property="og:image"]', 'property').setAttribute('content', imageUrl || '');
+  ensureMeta('meta[property="og:image:width"]', 'property').setAttribute('content', previewWidth);
+  ensureMeta('meta[property="og:image:height"]', 'property').setAttribute('content', previewHeight);
+  ensureMeta('meta[property="og:url"]', 'property').setAttribute('content', canonicalUrl);
+  ensureMeta('meta[property="og:type"]', 'property').setAttribute('content', 'website');
+  ensureMeta('meta[name="twitter:title"]', 'name').setAttribute('content', titleText);
+  ensureMeta('meta[name="twitter:description"]', 'name').setAttribute('content', descriptionText);
+  ensureMeta('meta[name="twitter:image"]', 'name').setAttribute('content', imageUrl || '');
 
   const canonical = document.querySelector('link[rel="canonical"]');
   if (canonical) {
