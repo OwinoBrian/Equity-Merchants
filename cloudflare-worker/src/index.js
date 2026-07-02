@@ -330,7 +330,6 @@ function isFieldError(data, fieldName) {
 function buildAirtableFields(payload, fieldConfig) {
   const map = fieldConfig.fields;
   const photoUrls = normalizePhotoUrls(payload.photoUrls);
-  const photoData = normalizePhotoData(payload.photoData);
   const priceValue = String(payload.price || "").trim();
   const numericPrice = Number(priceValue);
   const fields = {
@@ -343,14 +342,6 @@ function buildAirtableFields(payload, fieldConfig) {
     [map.businessId]: payload.businessId || "",
     [map.photo]: photoUrls.join("\n")
   };
-
-  if (photoData.length) {
-    try {
-      fields[map.photoBase64] = JSON.stringify(photoData.slice(0, 10));
-    } catch (error) {
-      // ignore stringify errors
-    }
-  }
 
   return fields;
 }
@@ -371,23 +362,6 @@ function normalizePhotoUrls(value) {
 
   if (value && typeof value === "object" && typeof value.url === "string") {
     return [value.url.trim()].filter(Boolean);
-  }
-
-  return [];
-}
-
-function normalizePhotoData(value) {
-  if (Array.isArray(value)) {
-    return value
-      .map((item) => String(item || "").trim())
-      .filter((item) => item.startsWith("data:"));
-  }
-
-  if (typeof value === "string") {
-    return value
-      .split(/\r?\n|,/)
-      .map((item) => item.trim())
-      .filter((item) => item.startsWith("data:"));
   }
 
   return [];
