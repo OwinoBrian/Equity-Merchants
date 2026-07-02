@@ -3,7 +3,7 @@ main = "src/index.js"
 compatibility_date = "2026-05-12"
 
 [vars]
-ALLOWED_ORIGIN = "https://equitymerchants.ujao.pages.dev,https://www.equitymerchants.co.ke,https://equitymerchants.co.ke"
+ALLOWED_ORIGIN = "https://equitymerchants.ujao.pages.dev,https://equitymerchants.ujao.workers.dev,https://www.equitymerchants.co.ke,https://equitymerchants.co.ke"
 AIRTABLE_BASE_ID = "appwFq9FXqtf2cV6B"
 AIRTABLE_TABLE_NAME = "Listings"
 R2_PUBLIC_URL = "https://pub-03c49e85551c461f8d2493857299bacb.r2.dev"

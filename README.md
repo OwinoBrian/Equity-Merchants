@@ -47,6 +47,7 @@ There are 3 ways to work with this repo:
    - Open the preview URL that Cloudflare gives you after a Pages deploy
    - The frontend automatically detects the `*.pages.dev` hostname
    - It uses the preview/production worker URL from `config.js`
+   - If you host the frontend on a `*.workers.dev` domain instead, add that exact origin to `ALLOWED_ORIGIN` in `cloudflare-worker/wrangler.toml`
 
 3. Production
    - Open your live custom domain
