@@ -20,8 +20,8 @@ const APP_CONFIG = {
   themeColor: "#003049",
   workerBaseUrls: {
     local: "http://127.0.0.1:8788",
-    preview: "https://equitymerchants.ujao.workers.dev",
-    production: "https://equitymerchants.ujao.workers.dev"
+    preview: "https://equity-merchants-listings.ujao.workers.dev",
+    production: "https://equity-merchants-listings.ujao.workers.dev"
   },
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",
