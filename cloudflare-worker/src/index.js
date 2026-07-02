@@ -31,15 +31,20 @@ export default {
       .map((origin) => origin.trim())
       .filter(Boolean);
     const allowsAnyOrigin = configuredOrigins.includes("*");
+    const isLocalOrigin = (origin) => /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$/.test(origin);
+    const allowsLocalOrigin = configuredOrigins.some(isLocalOrigin);
     const allowedOrigin = allowsAnyOrigin
       ? "*"
       : configuredOrigins.includes(requestOrigin)
         ? requestOrigin
-        : configuredOrigins[0] || "";
+        : requestOrigin && isLocalOrigin(requestOrigin) && allowsLocalOrigin
+          ? requestOrigin
+          : configuredOrigins.find((origin) => isLocalOrigin(origin)) || configuredOrigins[0] || "";
     const corsHeaders = {
       "Access-Control-Allow-Origin": allowedOrigin,
       "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
       "Access-Control-Allow-Headers": "Content-Type",
+      "Vary": "Origin",
       "Content-Type": "application/json; charset=utf-8"
     };
 
@@ -167,13 +172,6 @@ async function handleUploadRequest(request, env, corsHeaders) {
     return jsonResponse({ error: "Method not allowed" }, 405, corsHeaders);
   }
 
-  if (!env.LISTINGS_IMAGES || !env.R2_PUBLIC_URL) {
-    return jsonResponse({
-      error: "Missing R2 configuration",
-      details: "Add the LISTINGS_IMAGES bucket binding and set R2_PUBLIC_URL before uploading images."
-    }, 500, corsHeaders);
-  }
-
   try {
     const formData = await request.formData();
     const file = getUploadFile(formData);
@@ -196,8 +194,14 @@ async function handleUploadRequest(request, env, corsHeaders) {
       }, 413, corsHeaders);
     }
 
-    const uploadResult = await putImageInR2(file, env);
-    return jsonResponse({ url: uploadResult.url }, 200, corsHeaders);
+    try {
+      const uploadResult = await putImageInR2(file, env);
+      return jsonResponse({ url: uploadResult.url, storage: "r2" }, 200, corsHeaders);
+    } catch (storageError) {
+      console.warn("R2 upload failed, using data URL fallback", storageError);
+      const dataUrl = await fileToDataUrl(file);
+      return jsonResponse({ url: dataUrl, storage: "data-url" }, 200, corsHeaders);
+    }
   } catch (error) {
     return jsonResponse({
       error: "Unable to upload image",
@@ -230,6 +234,25 @@ function isUploadFile(value) {
     && typeof value.name === "string"
     && typeof value.type === "string"
     && typeof value.size === "number";
+}
+
+function arrayBufferToBase64(buffer) {
+  let binary = "";
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+
+  for (let offset = 0; offset < bytes.length; offset += chunkSize) {
+    const chunk = bytes.subarray(offset, offset + chunkSize);
+    binary += String.fromCharCode(...chunk);
+  }
+
+  return btoa(binary);
+}
+
+async function fileToDataUrl(file) {
+  const bytes = await file.arrayBuffer();
+  const base64 = arrayBufferToBase64(bytes);
+  return `data:${file.type || "application/octet-stream"};base64,${base64}`;
 }
 
 async function putImageInR2(file, env) {

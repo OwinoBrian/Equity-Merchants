@@ -41,7 +41,7 @@ There are 3 ways to work with this repo:
    ```
    - The app automatically uses the local worker URL from `config.js`
    - Copy `cloudflare-worker/.dev.vars.example` to `cloudflare-worker/.dev.vars`
-   - Make sure `ALLOWED_ORIGIN` in `.dev.vars` matches the port you used
+   - Make sure `ALLOWED_ORIGIN` in `.dev.vars` includes the port you used, including `http://127.0.0.1:8787` if you serve the frontend there
 
 2. Cloudflare Pages preview
    - Open the preview URL that Cloudflare gives you after a Pages deploy

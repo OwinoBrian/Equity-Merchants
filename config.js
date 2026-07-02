@@ -19,7 +19,7 @@ const APP_CONFIG = {
   faviconSrc: "Equity Merchants.png",
   themeColor: "#003049",
   workerBaseUrls: {
-    local: "http://127.0.0.1:8787",
+    local: "http://127.0.0.1:8788",
     preview: "https://equity-merchants-listings.YOUR-SUBDOMAIN.workers.dev",
     production: "https://equity-merchants-listings.YOUR-SUBDOMAIN.workers.dev"
   },
