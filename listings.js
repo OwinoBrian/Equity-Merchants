@@ -141,6 +141,21 @@ function getThumbPhotoUrl(photo) {
   return photo.thumbUrl || photo.cardUrl || photo.url || "";
 }
 
+function wireImageFallback(img, fallbackSrc) {
+  if (!img || !fallbackSrc || fallbackSrc === img.src) {
+    return;
+  }
+
+  img.addEventListener("error", () => {
+    if (img.dataset.fallbackApplied === "true") {
+      return;
+    }
+
+    img.dataset.fallbackApplied = "true";
+    img.src = fallbackSrc;
+  }, { once: true });
+}
+
 function logDebug(message, details = "") {
   if (!debugEnabled) {
     return;
@@ -189,7 +204,7 @@ function createListingCard(listing) {
   card.innerHTML = `
     ${
       photoUrl
-        ? `<div class="listing-image"><img src="${photoUrl}" alt="${listing.propertyName}" loading="lazy" decoding="async"></div>`
+        ? `<div class="listing-image"><img src="${photoUrl}" data-fallback-src="${listing.photos[0]?.fallbackUrl || ""}" alt="${listing.propertyName}" loading="lazy" decoding="async"></div>`
         : `<div class="listing-placeholder">${listing.propertyName}</div>`
     }
     <div class="listing-content">
@@ -230,6 +245,11 @@ function createListingCard(listing) {
       window.location.href = `detail.html?id=${listing.id}`;
     }
   });
+
+  const img = card.querySelector(".listing-image img");
+  if (img) {
+    wireImageFallback(img, img.dataset.fallbackSrc || "");
+  }
 
   return card;
 }

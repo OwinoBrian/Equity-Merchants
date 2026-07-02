@@ -66,6 +66,24 @@ function findRecordById(data, recordId) {
   return data.records.find((item) => item && item.id === recordId) || null;
 }
 
+function setImageWithFallback(img, primarySrc, fallbackSrc, altText) {
+  img.alt = altText;
+  img.src = primarySrc;
+
+  if (!fallbackSrc || fallbackSrc === primarySrc) {
+    return;
+  }
+
+  img.addEventListener('error', () => {
+    if (img.dataset.fallbackApplied === 'true') {
+      return;
+    }
+
+    img.dataset.fallbackApplied = 'true';
+    img.src = fallbackSrc;
+  }, { once: true });
+}
+
 async function loadDetail() {
   const params = new URLSearchParams(window.location.search);
   const recordId = params.get('id');
@@ -131,8 +149,7 @@ async function loadDetail() {
         const frame = document.createElement('figure');
         frame.className = `detail-gallery-card${index === 0 ? ' is-featured' : ''}`;
         const img = document.createElement('img');
-        img.src = photo.url;
-        img.alt = listingTitle;
+        setImageWithFallback(img, photo.url, photo.fallbackUrl, listingTitle);
         frame.appendChild(img);
         galleryEl.appendChild(frame);
       });

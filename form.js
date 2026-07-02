@@ -72,6 +72,15 @@ function normalizePhotoUrls(value) {
   return [];
 }
 
+function readFileAsDataUrl(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ""));
+    reader.onerror = () => reject(reader.error || new Error("Unable to read image file"));
+    reader.readAsDataURL(file);
+  });
+}
+
 function renderPhotoPreviews(srcs) {
   if (!previewsEl) {
     return;
@@ -226,6 +235,7 @@ form.addEventListener('submit', async (event) => {
   const formData = new FormData(form);
   const manualPhotoUrls = normalizePhotoUrls(formData.get('photoUrls'));
   let uploadedPhotoUrls = [];
+  let uploadedPhotoData = [];
   const payload = {
     recordId: formData.get('recordId') || '',
     businessId: formData.get('businessId') || APP_CONFIG.businessId,
@@ -235,15 +245,18 @@ form.addEventListener('submit', async (event) => {
     type: formData.get('type') || 'House',
     status: formData.get('status') || APP_CONFIG.activeListingStatus,
     description: formData.get('description') || '',
-    photoUrls: []
+    photoUrls: [],
+    photoData: []
   };
 
   try {
     if (selectedPhotoFiles.length) {
       uploadedPhotoUrls = await uploadSelectedPhotos(selectedPhotoFiles);
+      uploadedPhotoData = await Promise.all(selectedPhotoFiles.map((file) => readFileAsDataUrl(file)));
     }
 
     payload.photoUrls = dedupePhotoUrls([...manualPhotoUrls, ...uploadedPhotoUrls]);
+    payload.photoData = dedupePhotoUrls(uploadedPhotoData);
     setStatus('Saving listing details...');
 
     const response = await fetch(getWorkerUrl(), {

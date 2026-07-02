@@ -119,7 +119,7 @@ function normalizeApiFields(fields) {
 }
 
 function parseListingPhotos(fields) {
-  const toPhotoObject = (value) => {
+  const toPhotoObject = (value, fallbackUrl = "") => {
     const url = String(value || "").trim();
     if (!url) {
       return null;
@@ -128,9 +128,25 @@ function parseListingPhotos(fields) {
     return {
       url,
       cardUrl: url,
-      thumbUrl: url
+      thumbUrl: url,
+      fallbackUrl: String(fallbackUrl || "").trim()
     };
   };
+
+  const base64Photos = [];
+  if (fields.photoBase64) {
+    try {
+      const baseList = typeof fields.photoBase64 === "string"
+        ? JSON.parse(fields.photoBase64)
+        : fields.photoBase64;
+
+      if (Array.isArray(baseList)) {
+        base64Photos.push(...baseList.map((item) => String(item || "").trim()).filter(Boolean));
+      }
+    } catch (error) {
+      // ignore parse errors
+    }
+  }
 
   let photos = [];
 
@@ -142,7 +158,7 @@ function parseListingPhotos(fields) {
         }
 
         if (typeof item === "string") {
-          return toPhotoObject(item);
+          return toPhotoObject(item, base64Photos.shift() || "");
         }
 
         if (typeof item === "object") {
@@ -150,7 +166,8 @@ function parseListingPhotos(fields) {
           return {
             url,
             cardUrl: item.cardUrl || url,
-            thumbUrl: item.thumbUrl || item.cardUrl || url
+            thumbUrl: item.thumbUrl || item.cardUrl || url,
+            fallbackUrl: base64Photos.shift() || item.fallbackUrl || ""
           };
         }
 
@@ -164,12 +181,12 @@ function parseListingPhotos(fields) {
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) {
-          photos = parsed.map((item) => toPhotoObject(item)).filter(Boolean);
+          photos = parsed.map((item) => toPhotoObject(item, base64Photos.shift() || "")).filter(Boolean);
         }
       } catch (error) {
         photos = raw
           .split(/\r?\n|,/)
-          .map((item) => toPhotoObject(item))
+          .map((item) => toPhotoObject(item, base64Photos.shift() || ""))
           .filter(Boolean);
       }
     }
@@ -179,34 +196,27 @@ function parseListingPhotos(fields) {
       photos = [{
         url,
         cardUrl: fields.photo.cardUrl || url,
-        thumbUrl: fields.photo.thumbUrl || fields.photo.cardUrl || url
+        thumbUrl: fields.photo.thumbUrl || fields.photo.cardUrl || url,
+        fallbackUrl: base64Photos.shift() || fields.photo.fallbackUrl || ""
       }];
     }
   }
 
-  if ((!photos || !photos.length) && fields.photoBase64) {
-    try {
-      const baseList = typeof fields.photoBase64 === "string"
-        ? JSON.parse(fields.photoBase64)
-        : fields.photoBase64;
-
-      if (Array.isArray(baseList) && baseList.length) {
-        photos = baseList.map((dataUrl) => ({
-          url: dataUrl,
-          cardUrl: dataUrl,
-          thumbUrl: dataUrl
-        }));
-      }
-    } catch (error) {
-      // ignore parse errors
-    }
+  if ((!photos || !photos.length) && base64Photos.length) {
+    photos = base64Photos.map((dataUrl) => ({
+      url: dataUrl,
+      cardUrl: dataUrl,
+      thumbUrl: dataUrl,
+      fallbackUrl: dataUrl
+    }));
   }
 
   return photos
     .map((item) => ({
       url: item.url,
       cardUrl: item.cardUrl || item.url,
-      thumbUrl: item.thumbUrl || item.cardUrl || item.url
+      thumbUrl: item.thumbUrl || item.cardUrl || item.url,
+      fallbackUrl: item.fallbackUrl || ""
     }))
     .filter((item) => item.url || item.cardUrl || item.thumbUrl);
 }
