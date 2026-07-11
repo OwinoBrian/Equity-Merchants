@@ -39,9 +39,7 @@ function buildDetailUrl(recordId) {
 }
 
 function getUploadUrl() {
-  const url = new URL(getWorkerBaseUrl());
-  url.pathname = '/api/upload';
-  return url.toString();
+  return getUploadApiUrl();
 }
 
 function setBusyState(busy) {
@@ -182,7 +180,7 @@ function findRecordById(data, recordId) {
 
 async function loadListing(recordId) {
   try {
-    const response = await fetch(`${getWorkerUrl()}&action=get&id=${encodeURIComponent(recordId)}`);
+    const response = await fetch(getListingApiUrl(recordId));
     const data = await response.json();
     const record = findRecordById(data, recordId);
 
@@ -246,7 +244,7 @@ form.addEventListener('submit', async (event) => {
     payload.photoUrls = dedupePhotoUrls([...manualPhotoUrls, ...uploadedPhotoUrls]);
     setStatus('Saving listing details...');
 
-    const response = await fetch(getWorkerUrl(), {
+    const response = await fetch(getListingsApiUrl(), {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload)
@@ -319,7 +317,7 @@ async function retryPendingSubmissions() {
     const remaining = [];
     for (const item of list) {
       try {
-        const res = await fetch(getWorkerUrl(), {
+        const res = await fetch(getListingsApiUrl(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(item.payload)

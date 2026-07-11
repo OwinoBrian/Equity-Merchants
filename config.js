@@ -18,11 +18,7 @@ const APP_CONFIG = {
   logoAlt: "Equity Merchants Ltd logo",
   faviconSrc: "Equity Merchants.png",
   themeColor: "#003049",
-  workerBaseUrls: {
-    local: "http://127.0.0.1:8788",
-    preview: "https://equity-merchants-listings.ujao.workers.dev",
-    production: "https://equity-merchants-listings.ujao.workers.dev"
-  },
+  apiBaseUrl: "/api",
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",
   airtableEditorUrl: "https://airtable.com/appwFq9FXqtf2cV6B/tbl7SBcj3I3jc0QbU",
@@ -43,20 +39,6 @@ const APP_CONFIG = {
   }
 };
 
-function getRuntimeEnvironment() {
-  const hostname = window.location.hostname.toLowerCase();
-
-  if (hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1") {
-    return "local";
-  }
-
-  if (hostname.endsWith(".pages.dev")) {
-    return "preview";
-  }
-
-  return "production";
-}
-
 function getFieldConfigPayload() {
   return {
     fields: APP_CONFIG.airtableFields,
@@ -64,16 +46,33 @@ function getFieldConfigPayload() {
   };
 }
 
-function getWorkerBaseUrl() {
-  const runtime = getRuntimeEnvironment();
-  return APP_CONFIG.workerBaseUrls[runtime] || APP_CONFIG.workerBaseUrls.production;
+function getApiBaseUrl() {
+  return String(APP_CONFIG.apiBaseUrl || "/api").replace(/\/+$/, "") || "/api";
 }
 
-function getWorkerUrl() {
-  const url = new URL(getWorkerBaseUrl());
+function getApiUrl(pathname = "") {
+  const baseUrl = getApiBaseUrl();
+  const path = String(pathname || "");
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${baseUrl}${normalizedPath}`;
+}
+
+function getListingsApiUrl() {
+  const url = new URL(getApiUrl("/listings"), window.location.origin);
   url.searchParams.set("businessId", APP_CONFIG.businessId);
   url.searchParams.set("fieldConfig", JSON.stringify(getFieldConfigPayload()));
   return url.toString();
+}
+
+function getListingApiUrl(recordId) {
+  const url = new URL(getApiUrl(`/listings/${encodeURIComponent(recordId)}`), window.location.origin);
+  url.searchParams.set("businessId", APP_CONFIG.businessId);
+  url.searchParams.set("fieldConfig", JSON.stringify(getFieldConfigPayload()));
+  return url.toString();
+}
+
+function getUploadApiUrl() {
+  return getApiUrl("/upload");
 }
 
 function getGenericWhatsAppMessage() {

@@ -1,13 +1,6 @@
-# Node dependencies
-/cloudflare-worker/node_modules/
-
-# Wrangler local state
-/cloudflare-worker/.wrangler/
-/cloudflare-worker/.dev.vars
-
-
-# OS / editor files
-.DS_Store
-*.log
-
-# 
+.dev.vars
+.dev.vars.*
+cloudflare-worker/.dev.vars
+cloudflare-worker/.dev.vars.*
+cloudflare-worker/.wrangler/
+cloudflare-worker/node_modules/

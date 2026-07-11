@@ -1,6 +1,6 @@
 // WhatsApp contact number used across the site.
 const WHATSAPP_NUMBER = APP_CONFIG.whatsappNumber;
-const LISTINGS_API_URL = getWorkerUrl();
+const LISTINGS_API_URL = getListingsApiUrl();
 const LISTINGS_PER_PAGE = 6;
 
 const navLinks = document.getElementById("nav-links");
@@ -371,11 +371,6 @@ function refreshFilteredListings(resetPage = true) {
 }
 
 async function fetchListings() {
-  if (LISTINGS_API_URL.includes("YOUR_")) {
-    showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
-    return;
-  }
-
   try {
     logDebug("Fetching listing page data", LISTINGS_API_URL);
     const response = await fetch(LISTINGS_API_URL, {

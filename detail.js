@@ -94,11 +94,7 @@ async function loadDetail() {
   }
 
   try {
-    const workerUrl = new URL(getWorkerUrl());
-    workerUrl.searchParams.set('action', 'get');
-    workerUrl.searchParams.set('id', recordId);
-
-    const response = await fetch(workerUrl.toString(), {
+    const response = await fetch(getListingApiUrl(recordId), {
       method: 'GET',
       headers: { Accept: 'application/json' }
     });

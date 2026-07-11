@@ -35,6 +35,7 @@ self.addEventListener('fetch', (event) => {
   if (event.request.url.includes('http') && !event.request.url.startsWith(self.location.origin)) return;
 
   const requestUrl = new URL(event.request.url);
+  if (requestUrl.pathname.startsWith('/api/')) return;
   const isAppFile = /\.(?:html|css|js)$/.test(requestUrl.pathname) || requestUrl.pathname.endsWith('/');
 
   event.respondWith(

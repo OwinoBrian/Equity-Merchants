@@ -2,7 +2,7 @@
 const WHATSAPP_NUMBER = APP_CONFIG.whatsappNumber;
 
 // Public API endpoint used by the site to load listings.
-const LISTINGS_API_URL = getWorkerUrl();
+const LISTINGS_API_URL = getListingsApiUrl();
 const FEATURED_LISTINGS_LIMIT = 3;
 
 const navLinks = document.getElementById("nav-links");
@@ -243,11 +243,6 @@ function showListingState(message) {
 }
 
 async function fetchListings() {
-  if (LISTINGS_API_URL.includes("YOUR_")) {
-    showListingState("No listings available at the moment — check back soon. Contact us directly on WhatsApp for off-market properties.");
-    return;
-  }
-
   try {
     logDebug("Fetching featured listings", LISTINGS_API_URL);
     const response = await fetch(LISTINGS_API_URL, {

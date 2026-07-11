@@ -54,7 +54,7 @@ async function retryPending() {
     const remaining = [];
     for (const item of list) {
       try {
-        const res = await fetch(getWorkerUrl(), {
+        const res = await fetch(getListingsApiUrl(), {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(item.payload)
