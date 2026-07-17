@@ -1,43 +1,5 @@
-const APP_CONFIG = {
-  siteName: "Equity Merchants Ltd",
-  shortName: "Equity Merchants",
-  brandNameShort: "Equity Merchants",
-  adminAppName: "Equity Merchants Admin",
-  adminAppShortName: "Equity Admin",
-  tagline: "Property. Supplies. Solutions.",
-  heroTitle: "Property & Real Estate in Kenya",
-  description: "Equity Merchants Ltd is a Nairobi-based property and real estate company offering land, homes, rentals, development, and trusted transaction support across Kenya.",
-  listingsDescription: "Browse all active Equity Merchants Ltd property listings with filters by location, type, and price.",
-  keywords: "Equity Merchants Ltd, Nairobi real estate, Kenya property, land for sale Kenya, homes for sale Nairobi, commercial property Kenya, property management Nairobi",
-  businessId: "equity-merchants",
-  whatsappNumber: "254759043208",
-  contactEmail: "equity161@gmail.com",
-  address: "55356 00200 Nairobi, Kenya",
-  mapText: "Map loading - contact us for directions",
-  logoSrc: "Equity Merchants.png",
-  logoAlt: "Equity Merchants Ltd logo",
-  faviconSrc: "Equity Merchants.png",
-  themeColor: "#003049",
-  apiBaseUrl: "/api",
-  footerCredit: "Built by Ujao Defined",
-  footerCreditUrl: "https://ujao-defined.com",
-  airtableEditorUrl: "https://airtable.com/appwFq9FXqtf2cV6B/tbl7SBcj3I3jc0QbU",
-  airtableAddFormUrl: "https://airtable.com/appwFq9FXqtf2cV6B/pagWEy5JYFErSCwn4/form",
-  airtableBaseUrl: "https://airtable.com/appwFq9FXqtf2cV6B",
-  activeListingStatus: "Active",
-  airtableFields: {
-    propertyName: "Property Name",
-    propertyNameFallback: "Name",
-    location: "Location",
-    price: "Price",
-    type: "Type",
-    status: "Status",
-    description: "Description",
-    businessId: "Business ID",
-    photo: "Photo",
-    photoBase64: "PhotoBase64"
-  }
-};
+// APP_CONFIG is defined in client-config.js, which every page loads BEFORE this
+// file. This file holds only shared logic — it never varies between clients.
 
 function getFieldConfigPayload() {
   return {
@@ -57,18 +19,24 @@ function getApiUrl(pathname = "") {
   return `${baseUrl}${normalizedPath}`;
 }
 
-function getListingsApiUrl() {
-  const url = new URL(getApiUrl("/listings"), window.location.origin);
+function applyTenantParams(url) {
   url.searchParams.set("businessId", APP_CONFIG.businessId);
   url.searchParams.set("fieldConfig", JSON.stringify(getFieldConfigPayload()));
-  return url.toString();
+  if (APP_CONFIG.airtableBaseId) {
+    url.searchParams.set("baseId", APP_CONFIG.airtableBaseId);
+  }
+  if (APP_CONFIG.airtableTableName) {
+    url.searchParams.set("tableName", APP_CONFIG.airtableTableName);
+  }
+  return url;
+}
+
+function getListingsApiUrl() {
+  return applyTenantParams(new URL(getApiUrl("/listings"), window.location.origin)).toString();
 }
 
 function getListingApiUrl(recordId) {
-  const url = new URL(getApiUrl(`/listings/${encodeURIComponent(recordId)}`), window.location.origin);
-  url.searchParams.set("businessId", APP_CONFIG.businessId);
-  url.searchParams.set("fieldConfig", JSON.stringify(getFieldConfigPayload()));
-  return url.toString();
+  return applyTenantParams(new URL(getApiUrl(`/listings/${encodeURIComponent(recordId)}`), window.location.origin)).toString();
 }
 
 function getUploadApiUrl() {

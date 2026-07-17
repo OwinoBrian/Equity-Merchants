@@ -1,6 +1,8 @@
-importScripts('./config.js');
+// Only import the per-client config (plain data). config.js references `window`,
+// which does not exist in a service worker, so it must not be imported here.
+importScripts('./client-config.js');
 
-const CACHE_NAME = `${APP_CONFIG.businessId}-v3`;
+const CACHE_NAME = `${APP_CONFIG.businessId}-v4`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -10,6 +12,7 @@ const APP_SHELL = [
   './listings.html',
   './styles.css',
   './brand.css',
+  './client-config.js',
   './config.js',
   './script.js',
   './listings.js',

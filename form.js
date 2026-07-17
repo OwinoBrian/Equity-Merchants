@@ -34,8 +34,15 @@ function getApiErrorMessage(data, fallback) {
 }
 
 function buildDetailUrl(recordId) {
-  const base = `${window.location.origin}${window.location.pathname.replace(/form\.html$/, 'detail.html')}`;
-  return `${base}?id=${recordId}`;
+  // Point to detail.html regardless of whether the form is served as
+  // /form.html or as a clean URL (/form) on Cloudflare Pages. Replacing the
+  // last path segment handles both cases (and subdirectory hosting).
+  const url = new URL(window.location.href);
+  url.hash = '';
+  url.search = '';
+  url.pathname = url.pathname.replace(/[^/]*$/, 'detail.html');
+  url.searchParams.set('id', recordId);
+  return url.toString();
 }
 
 function getUploadUrl() {
