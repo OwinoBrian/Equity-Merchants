@@ -95,6 +95,11 @@ function normalizeApiFields(fields) {
 }
 
 function parseListingPhotos(fields) {
+  const splitPhotoUrls = (value) => String(value || "")
+    .split(/[\s,]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+
   const toPhotoObject = (value, fallbackUrl = "") => {
     const url = String(value || "").trim();
     if (!url) {
@@ -157,14 +162,19 @@ function parseListingPhotos(fields) {
     const raw = fields.photo.trim();
 
     if (raw) {
-      try {
-        const parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) {
-          photos = parsed.map((item) => toPhotoObject(item, base64Photos.shift() || "")).filter(Boolean);
+      if (raw.startsWith("[")) {
+        try {
+          const parsed = JSON.parse(raw);
+          if (Array.isArray(parsed)) {
+            photos = parsed.map((item) => toPhotoObject(item, base64Photos.shift() || "")).filter(Boolean);
+          }
+        } catch (error) {
+          photos = splitPhotoUrls(raw)
+            .map((item) => toPhotoObject(item, base64Photos.shift() || ""))
+            .filter(Boolean);
         }
-      } catch (error) {
-        photos = raw
-          .split(/\r?\n|,/)
+      } else {
+        photos = splitPhotoUrls(raw)
           .map((item) => toPhotoObject(item, base64Photos.shift() || ""))
           .filter(Boolean);
       }

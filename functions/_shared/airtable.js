@@ -48,7 +48,7 @@ export function normalizePhotoUrls(value) {
 
   if (typeof value === "string") {
     return value
-      .split(/\r?\n|,/)
+      .split(/[\s,]+/)
       .map((item) => item.trim())
       .filter(Boolean);
   }
