@@ -43,6 +43,15 @@ function getUploadApiUrl() {
   return getApiUrl("/upload");
 }
 
+function getImageProxyUrl(imageUrl) {
+  const src = String(imageUrl || "").trim();
+  if (!src) {
+    return "";
+  }
+
+  return getApiUrl(`/image?src=${encodeURIComponent(src)}`);
+}
+
 function getGenericWhatsAppMessage() {
   return `Hello ${APP_CONFIG.siteName}, I would like to learn more about your available properties and services.`;
 }
@@ -92,10 +101,12 @@ function parseListingPhotos(fields) {
       return null;
     }
 
+    const proxiedUrl = getImageProxyUrl(url);
+
     return {
-      url,
-      cardUrl: url,
-      thumbUrl: url,
+      url: proxiedUrl,
+      cardUrl: proxiedUrl,
+      thumbUrl: proxiedUrl,
       fallbackUrl: String(fallbackUrl || "").trim()
     };
   };
@@ -130,10 +141,11 @@ function parseListingPhotos(fields) {
 
         if (typeof item === "object") {
           const url = item.url || item.cardUrl || item.thumbUrl || "";
+          const proxiedUrl = getImageProxyUrl(url);
           return {
-            url,
-            cardUrl: item.cardUrl || url,
-            thumbUrl: item.thumbUrl || item.cardUrl || url,
+            url: proxiedUrl,
+            cardUrl: getImageProxyUrl(item.cardUrl || url),
+            thumbUrl: getImageProxyUrl(item.thumbUrl || item.cardUrl || url),
             fallbackUrl: base64Photos.shift() || item.fallbackUrl || ""
           };
         }
@@ -160,10 +172,11 @@ function parseListingPhotos(fields) {
   } else if (fields.photo && typeof fields.photo === "object") {
     const url = fields.photo.url || fields.photo.cardUrl || fields.photo.thumbUrl || "";
     if (url) {
+      const proxiedUrl = getImageProxyUrl(url);
       photos = [{
-        url,
-        cardUrl: fields.photo.cardUrl || url,
-        thumbUrl: fields.photo.thumbUrl || fields.photo.cardUrl || url,
+        url: proxiedUrl,
+        cardUrl: getImageProxyUrl(fields.photo.cardUrl || url),
+        thumbUrl: getImageProxyUrl(fields.photo.thumbUrl || fields.photo.cardUrl || url),
         fallbackUrl: base64Photos.shift() || fields.photo.fallbackUrl || ""
       }];
     }

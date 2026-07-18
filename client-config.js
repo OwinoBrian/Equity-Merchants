@@ -1,9 +1,10 @@
 // ---------------------------------------------------------------------------
-// PER-CLIENT CONFIG. This is the ONLY file that changes between clients.
-// The shared logic that reads it lives in config.js (do not duplicate it).
-// A copy of this file lives in clients/<slug>/client-config.js — that folder
-// is the source of truth for deploys. This root copy is the local-dev default;
-// run `npm run use <slug>` to preview a different client locally.
+// PER-CLIENT CONFIG.
+// This file is the active tenant config for the current Cloudflare Pages
+// deployment. The shared logic that reads it lives in config.js.
+//
+// For a new client, duplicate this file, update the branding + Airtable values,
+// and deploy that tenant as its own Pages project or preview branch.
 // ---------------------------------------------------------------------------
 const APP_CONFIG = {
   siteName: "Foyer Properties",
