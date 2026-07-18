@@ -24,7 +24,7 @@ const APP_CONFIG = {
   logoSrc: "foyer-properties.png",
   logoAlt: "Foyer Properties logo",
   faviconSrc: "foyer-properties.png",
-  themeColor: "#003049",
+  themeColor: "#d9ddd2",
   apiBaseUrl: "/api",
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",
