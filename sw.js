@@ -2,7 +2,7 @@
 // which does not exist in a service worker, so it must not be imported here.
 importScripts('./client-config.js');
 
-const CACHE_NAME = `${APP_CONFIG.businessId}-v4`;
+const CACHE_NAME = `${APP_CONFIG.businessId}-v5`;
 const APP_SHELL = [
   './',
   './index.html',
@@ -12,7 +12,9 @@ const APP_SHELL = [
   './listings.html',
   './styles.css',
   './brand.css',
+  './theme.css',
   './client-config.js',
+  './themes.js',
   './config.js',
   './script.js',
   './listings.js',

@@ -26,6 +26,16 @@ const APP_CONFIG = {
   logoAlt: "Foyer Properties logo",
   faviconSrc: "foyer-properties.png",
   themeColor: "#d9ddd2",
+  // Visual theme — pick one preset name from themes.js:
+  //   "warmOrange" | "coolProfessional" | "friendlyPill" | "boldMinimal"
+  // Leave unset/empty to keep the classic default look (theme.css fallbacks).
+  //   theme: "coolProfessional",
+  // Optional per-tenant nudge: override ONLY the primary/accent color without
+  // picking a different preset. primaryDark and the image tint are re-derived
+  // from this value automatically.
+  //   themeOverrides: { primary: "#0e7490" },
+  theme: "",
+  themeOverrides: {},
   apiBaseUrl: "/api",
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",

@@ -1,27 +1,22 @@
+/* Brand accent layer. Historically this file pinned per-tenant colors; those
+   are now driven by the theme system (themes.js -> config.js -> CSS vars in
+   theme.css). The --brand-* aliases remain for any legacy references and
+   simply follow the active theme. */
 :root {
-  --brand-primary: #003049;
-  --brand-secondary: #c1121f;
-  --brand-accent: #669bbc;
-  --brand-surface: #fffaf5;
-  --brand-heading: #07203b;
-  --brand-text: #1d1d1d;
-}
-
-/* Override core colors from styles.css */
-:root {
-  --navy: var(--brand-primary);
-  --crimson: var(--brand-secondary);
-  --sky: var(--brand-accent);
-  --cream: var(--brand-surface);
-  --charcoal: var(--brand-text);
+  --brand-primary: var(--color-secondary);
+  --brand-secondary: var(--color-primary);
+  --brand-accent: var(--color-sky);
+  --brand-surface: var(--color-surface);
+  --brand-heading: var(--color-secondary);
+  --brand-text: var(--color-text);
 }
 
 .site-header {
-  background: rgba(0, 48, 73, 0.92);
+  background: color-mix(in srgb, var(--color-secondary) 92%, transparent);
 }
 
 .btn-primary {
-  background: var(--brand-primary);
+  background: var(--color-primary);
 }
 
 .btn-secondary,
@@ -32,7 +27,11 @@
 }
 
 .hero {
-  background: linear-gradient(180deg, rgba(0, 48, 73, 0.08) 0%, rgba(255, 255, 255, 0.95) 100%);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--color-secondary) 8%, transparent) 0%,
+    rgba(255, 255, 255, 0.95) 100%
+  );
 }
 
 .footer-brand {

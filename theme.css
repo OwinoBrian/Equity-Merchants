@@ -1,0 +1,128 @@
+/* ---------------------------------------------------------------------------
+   THEME LAYER (shared — never varies per client).
+   Loaded AFTER styles.css + brand.css on every page.
+
+   config.js resolves the tenant's preset from themes.js and writes the
+   --color-* / --font-* / --radius-* custom properties inline on :root.
+   The fallback values below reproduce the classic Equity Merchants look, so
+   a tenant with no `theme` set renders exactly as before.
+
+   Button style is driven by body[data-style="solid" | "outline" | "pill"],
+   also set by config.js from the preset.
+--------------------------------------------------------------------------- */
+:root {
+  --color-primary: #c1121f;
+  --color-primary-dark: #780000;
+  --color-secondary: #003049;
+  --color-text: #1d1d1d;
+  --color-bg: #fdf7f2;
+  --color-surface: #fffaf5;
+  --font-heading: "DM Sans", sans-serif;
+  --font-body: "DM Sans", sans-serif;
+  --radius-button: 999px;
+  --radius-card: 22px;
+  --radius-image: 14px;
+
+  /* Derived tokens — everything below follows the six colors above, so a
+     tenant override of --color-primary re-tints all of it automatically. */
+  --color-accent-soft: color-mix(in srgb, var(--color-primary) 22%, #fff4e8);
+  --color-sky: color-mix(in srgb, var(--color-secondary) 55%, #ffffff);
+  --color-secondary-dark: color-mix(in srgb, var(--color-secondary), #000000 28%);
+  --color-secondary-deep: color-mix(in srgb, var(--color-secondary), #000000 55%);
+  --radius-field: min(var(--radius-button), 16px);
+  /* Subtle wash applied over hero/listing images (see .image-tint below).
+     Transparent by default so the classic look is untouched; config.js sets
+     the real primary-color tint when a theme preset is active. */
+  --image-tint: transparent;
+}
+
+/* Typography — headings use the preset heading font, everything else
+   inherits the body font set on <body> in styles.css. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.section-heading,
+.floating-stat,
+.footer-brand {
+  font-family: var(--font-heading);
+}
+
+/* ---------------------------------------------------------------------------
+   Button modes. styles.css provides the shared .btn box model; these rules
+   only swap the skin. With no data-style attribute (no theme configured),
+   the classic styles.css look applies untouched.
+--------------------------------------------------------------------------- */
+
+/* solid — flat fill, darkens on hover */
+body[data-style="solid"] .btn-primary {
+  background: var(--color-primary);
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-primary) 24%, transparent);
+}
+
+body[data-style="solid"] .btn-primary:hover,
+body[data-style="solid"] .btn-primary:focus-visible {
+  background: var(--color-primary-dark);
+}
+
+/* outline — transparent fill, 2px accent border, fills on hover */
+body[data-style="outline"] .btn-primary {
+  background: color-mix(in srgb, var(--color-surface) 65%, transparent);
+  border: 2px solid var(--color-primary);
+  color: var(--color-primary);
+  box-shadow: none;
+}
+
+body[data-style="outline"] .btn-primary:hover,
+body[data-style="outline"] .btn-primary:focus-visible {
+  background: var(--color-primary);
+  color: #ffffff;
+}
+
+body[data-style="outline"] .btn-secondary {
+  border-width: 2px;
+}
+
+/* pill — fully rounded, gradient fill */
+body[data-style="pill"] .btn,
+body[data-style="pill"] .pagination-page {
+  border-radius: 999px;
+}
+
+body[data-style="pill"] .btn-primary {
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  box-shadow: 0 12px 26px color-mix(in srgb, var(--color-primary) 26%, transparent);
+}
+
+/* ---------------------------------------------------------------------------
+   Image tint. A subtle primary-color wash over photography so images sit
+   inside the tenant palette. Applied automatically to the image containers
+   the site already renders (no markup/JS changes needed); .image-tint is
+   the same treatment as a reusable utility for future markup.
+--------------------------------------------------------------------------- */
+.image-tint,
+.listing-image,
+.detail-gallery-card,
+.modal-gallery-main {
+  position: relative;
+}
+
+.image-tint::before,
+.listing-image::before,
+.detail-gallery-card::before,
+.modal-gallery-main::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: var(--image-tint);
+  pointer-events: none;
+}
+
+/* Keep interactive/labeled layers above the tint wash. */
+.listing-image::after,
+.modal-gallery-main .modal-gallery-controls {
+  z-index: 2;
+}

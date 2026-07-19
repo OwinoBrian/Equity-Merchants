@@ -1,5 +1,121 @@
 // APP_CONFIG is defined in client-config.js, which every page loads BEFORE this
-// file. This file holds only shared logic — it never varies between clients.
+// file. THEMES is defined in themes.js, loaded before this file as well.
+// This file holds only shared logic — it never varies between clients.
+
+// --- Theming -----------------------------------------------------------------
+// Resolves the tenant's preset (APP_CONFIG.theme + optional themeOverrides)
+// against THEMES and applies it as CSS custom properties on :root, a
+// data-style attribute on <body>, and dynamically injected Google Fonts links.
+// theme.css consumes the variables; no other file knows about presets.
+
+function parseHexColor(hex) {
+  const value = String(hex || "").trim().replace(/^#/, "");
+  const expanded = value.length === 3
+    ? value.split("").map((ch) => ch + ch).join("")
+    : value;
+
+  if (!/^[0-9a-fA-F]{6}$/.test(expanded)) {
+    return null;
+  }
+
+  return {
+    r: parseInt(expanded.slice(0, 2), 16),
+    g: parseInt(expanded.slice(2, 4), 16),
+    b: parseInt(expanded.slice(4, 6), 16)
+  };
+}
+
+function darkenHexColor(hex, factor = 0.68) {
+  const rgb = parseHexColor(hex);
+  if (!rgb) {
+    return hex;
+  }
+
+  const toHex = (channel) => Math.round(channel * factor).toString(16).padStart(2, "0");
+  return `#${toHex(rgb.r)}${toHex(rgb.g)}${toHex(rgb.b)}`;
+}
+
+function hexToRgba(hex, alpha) {
+  const rgb = parseHexColor(hex);
+  if (!rgb) {
+    return "";
+  }
+
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+}
+
+function resolveTheme() {
+  const themeName = String(APP_CONFIG.theme || "").trim();
+  if (!themeName || typeof THEMES === "undefined" || !THEMES[themeName]) {
+    return null;
+  }
+
+  const preset = THEMES[themeName];
+  const overrides = APP_CONFIG.themeOverrides || {};
+  const colors = { ...preset.colors };
+
+  // Tenants may nudge only the primary color; the dark variant follows it.
+  if (overrides.primary && parseHexColor(overrides.primary)) {
+    colors.primary = overrides.primary;
+    colors.primaryDark = darkenHexColor(overrides.primary);
+  }
+
+  return { ...preset, colors };
+}
+
+function injectGoogleFonts(families) {
+  if (!Array.isArray(families) || !families.length) {
+    return;
+  }
+
+  const familyParams = families.map((family) => `family=${family}`).join("&");
+  const href = `https://fonts.googleapis.com/css2?${familyParams}&display=swap`;
+
+  if (document.querySelector(`link[href="${href}"]`)) {
+    return;
+  }
+
+  const preconnect = document.createElement("link");
+  preconnect.rel = "preconnect";
+  preconnect.href = "https://fonts.gstatic.com";
+  preconnect.crossOrigin = "anonymous";
+  document.head.appendChild(preconnect);
+
+  const stylesheet = document.createElement("link");
+  stylesheet.rel = "stylesheet";
+  stylesheet.href = href;
+  document.head.appendChild(stylesheet);
+}
+
+function applyTheme() {
+  const theme = resolveTheme();
+  if (!theme) {
+    return;
+  }
+
+  const root = document.documentElement.style;
+  root.setProperty("--color-primary", theme.colors.primary);
+  root.setProperty("--color-primary-dark", theme.colors.primaryDark);
+  root.setProperty("--color-secondary", theme.colors.secondary);
+  root.setProperty("--color-text", theme.colors.text);
+  root.setProperty("--color-bg", theme.colors.bg);
+  root.setProperty("--color-surface", theme.colors.surface);
+  root.setProperty("--font-heading", theme.fonts.heading);
+  root.setProperty("--font-body", theme.fonts.body);
+  root.setProperty("--radius-button", theme.radius.button);
+  root.setProperty("--radius-card", theme.radius.card);
+  root.setProperty("--radius-image", theme.radius.image);
+
+  const tint = hexToRgba(theme.colors.primary, theme.imageTintAlpha ?? 0.14);
+  if (tint) {
+    root.setProperty("--image-tint", tint);
+  }
+
+  document.body.setAttribute("data-style", theme.buttonStyle);
+  injectGoogleFonts(theme.fonts.google);
+}
+
+// --- Shared API / branding helpers ------------------------------------------
 
 function getFieldConfigPayload() {
   return {
@@ -333,6 +449,7 @@ function applyAdminManifest() {
 }
 
 window.addEventListener("DOMContentLoaded", () => {
+  applyTheme();
   applyBranding();
   applyAdminManifest();
 });
