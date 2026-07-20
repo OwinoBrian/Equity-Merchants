@@ -34,8 +34,15 @@ const APP_CONFIG = {
   // picking a different preset. primaryDark and the image tint are re-derived
   // from this value automatically.
   //   themeOverrides: { primary: "#0e7490" },
-  theme: "",
-  themeOverrides: {},
+  // For one-off element tweaks, set any CSS variable directly (applied after
+  // the preset — works with or without a theme selected):
+  //   themeOverrides: { cssVars: { "--nav-bg": "#12333f", "--radius-card": "10px" } },
+  theme: "warmOrange",
+  themeOverrides: {primary: "#c1121f",
+    cssVars:{
+
+    }
+  },
   apiBaseUrl: "/api",
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",

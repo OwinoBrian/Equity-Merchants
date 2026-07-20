@@ -30,6 +30,22 @@
   --color-secondary-dark: color-mix(in srgb, var(--color-secondary), #000000 28%);
   --color-secondary-deep: color-mix(in srgb, var(--color-secondary), #000000 55%);
   --radius-field: min(var(--radius-button), 16px);
+  /* Element-level hooks — follow the palette by default, individually
+     tweakable per tenant via themeOverrides.cssVars in client-config.js. */
+  --nav-bg: color-mix(in srgb, var(--color-bg) 92%, transparent);
+  /* Header/nav text — dark by default to stay readable on the light --nav-bg
+     above. The mobile dropdown keeps its own dark panel + white links. */
+  --nav-link-color: var(--color-secondary);
+  --nav-link-hover-bg: color-mix(in srgb, var(--color-secondary) 8%, transparent);
+  /* Hero text — the home hero background (brand.css) is light, so headings
+     default to the deep secondary and copy to a muted text color. The
+     admin/listings heroes keep their dark background + white text. */
+  --hero-heading-color: var(--color-secondary);
+  --hero-copy-color: color-mix(in srgb, var(--color-text) 72%, #8896a2);
+  --logo-width: 168px;
+  --logo-height: 112px;
+  --logo-width-mobile: 122px;
+  --logo-height-mobile: 82px;
   /* Subtle wash applied over hero/listing images (see .image-tint below).
      Transparent by default so the classic look is untouched; config.js sets
      the real primary-color tint when a theme preset is active. */

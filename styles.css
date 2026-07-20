@@ -156,8 +156,8 @@ button {
 }
 
 .logo-mark {
-  width: 168px;
-  height: 112px;
+  width: var(--logo-width);
+  height: var(--logo-height);
   object-fit: contain;
   flex-shrink: 0;
 }
@@ -1160,8 +1160,8 @@ button {
   }
 
   .logo-mark {
-    width: 122px;
-    height: 82px;
+    width: var(--logo-width-mobile);
+    height: var(--logo-height-mobile);
   }
 
   .nav-actions .btn-whatsapp {

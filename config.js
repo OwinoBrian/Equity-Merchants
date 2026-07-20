@@ -115,6 +115,24 @@ function applyTheme() {
   injectGoogleFonts(theme.fonts.google);
 }
 
+// Escape hatch for one-off tenant tweaks: APP_CONFIG.themeOverrides.cssVars
+// sets arbitrary CSS custom properties on :root AFTER the preset, e.g.
+//   themeOverrides: { cssVars: { "--nav-bg": "#12333f" } }
+// Runs even with no preset selected, so the classic look can be nudged too.
+function applyCssVarOverrides() {
+  const cssVars = (APP_CONFIG.themeOverrides || {}).cssVars;
+  if (!cssVars || typeof cssVars !== "object") {
+    return;
+  }
+
+  const root = document.documentElement.style;
+  Object.entries(cssVars).forEach(([name, value]) => {
+    if (/^--[\w-]+$/.test(name) && typeof value === "string") {
+      root.setProperty(name, value);
+    }
+  });
+}
+
 // --- Shared API / branding helpers ------------------------------------------
 
 function getFieldConfigPayload() {
@@ -450,6 +468,7 @@ function applyAdminManifest() {
 
 window.addEventListener("DOMContentLoaded", () => {
   applyTheme();
+  applyCssVarOverrides();
   applyBranding();
   applyAdminManifest();
 });

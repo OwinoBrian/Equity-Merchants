@@ -12,17 +12,37 @@
 }
 
 .site-header {
-  background: color-mix(in srgb, var(--color-secondary) 92%, transparent);
+  background: var(--nav-bg);
+  border-bottom-color: color-mix(in srgb, var(--color-secondary) 10%, transparent);
+}
+
+/* Header controls sit on the light --nav-bg, so they take the dark nav color.
+   (The mobile dropdown panel keeps its own dark background + white links —
+   see the media query below.) */
+.hamburger {
+  color: var(--nav-link-color);
+  border-color: color-mix(in srgb, var(--color-secondary) 18%, transparent);
+}
+
+@media (min-width: 768px) {
+  /* Desktop-only: inline nav links on the light header background. */
+  .nav-links a {
+    color: var(--nav-link-color);
+  }
+
+  .nav-links a:hover,
+  .nav-links a:focus-visible {
+    background: var(--nav-link-hover-bg);
+    color: var(--nav-link-color);
+  }
 }
 
 .btn-primary {
   background: var(--color-primary);
 }
 
-.btn-secondary,
 .btn-whatsapp,
-.btn-outline:hover,
-.nav-links a:hover {
+.btn-outline:hover {
   color: var(--white);
 }
 
@@ -32,6 +52,50 @@
     color-mix(in srgb, var(--color-secondary) 8%, transparent) 0%,
     rgba(255, 255, 255, 0.95) 100%
   );
+}
+
+/* Home hero sits on the light gradient above, so its text takes the dark
+   hooks. The admin/listings heroes keep their dark background + white text
+   from styles.css. */
+.hero .hero-copy h1 {
+  color: var(--hero-heading-color);
+}
+
+.hero .hero-copy p {
+  color: var(--hero-copy-color);
+}
+
+.hero .eyebrow {
+  color: var(--color-primary);
+}
+
+.hero .btn-secondary {
+  color: var(--hero-heading-color);
+  border-color: color-mix(in srgb, var(--color-secondary) 32%, transparent);
+}
+
+.hero .btn-secondary:hover,
+.hero .btn-secondary:focus-visible {
+  background: color-mix(in srgb, var(--color-secondary) 8%, transparent);
+}
+
+/* Floating stat card was designed for a dark hero — give it a light-surface
+   treatment so its text stays readable. */
+.hero .floating-card {
+  background: rgba(255, 255, 255, 0.82);
+  border-color: color-mix(in srgb, var(--color-secondary) 14%, transparent);
+}
+
+.hero .floating-card .mini-label {
+  color: color-mix(in srgb, var(--color-text) 60%, #8896a2);
+}
+
+.hero .floating-stat {
+  color: var(--color-primary);
+}
+
+.hero .floating-card p:last-child {
+  color: var(--hero-copy-color);
 }
 
 .footer-brand {
