@@ -136,9 +136,20 @@ function applyCssVarOverrides() {
 // --- Shared API / branding helpers ------------------------------------------
 
 function getFieldConfigPayload() {
-  return {
-    fields: APP_CONFIG.airtableFields,
+  const payload = {
     activeStatus: APP_CONFIG.activeListingStatus
+  };
+
+  if (APP_CONFIG.airtableFields && typeof APP_CONFIG.airtableFields === "object") {
+    payload.fields = APP_CONFIG.airtableFields;
+  }
+
+  if (APP_CONFIG.airtableFieldAliases && typeof APP_CONFIG.airtableFieldAliases === "object") {
+    payload.fieldAliases = APP_CONFIG.airtableFieldAliases;
+  }
+
+  return {
+    ...payload
   };
 }
 
@@ -191,16 +202,93 @@ function getGenericWhatsAppMessage() {
 }
 
 function getRequiredFieldLabels() {
-  const fields = APP_CONFIG.airtableFields;
+  const fields = APP_CONFIG.airtableFields || {};
+  const aliases = APP_CONFIG.airtableFieldAliases || {};
+  const pickLabel = (role, fallback) => {
+    const exact = fields[role];
+    if (exact) {
+      return exact;
+    }
+
+    const aliasList = aliases[role];
+    if (Array.isArray(aliasList) && aliasList.length) {
+      return aliasList[0];
+    }
+
+    return fallback;
+  };
+
   return [
-    fields.propertyName,
-    fields.location,
-    fields.price,
-    fields.type,
-    fields.description,
-    fields.status,
-    fields.photo
+    pickLabel("propertyName", "Property Name"),
+    pickLabel("location", "Location"),
+    pickLabel("price", "Price"),
+    pickLabel("type", "Type"),
+    pickLabel("description", "Description"),
+    pickLabel("status", "Status"),
+    pickLabel("photo", "Photos")
   ].join(", ");
+}
+
+function normalizeFieldName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+function getFieldAliases(role) {
+  const defaults = {
+    propertyName: ["Property Name", "Name", "Title", "Listing Name"],
+    propertyNameFallback: ["Name", "Title"],
+    location: ["Location", "Area", "Town", "City", "Address"],
+    price: ["Price", "Amount", "Cost", "Rate"],
+    type: ["Type", "Category", "Listing Type"],
+    status: ["Status", "State", "Availability"],
+    description: ["Description", "Details", "Summary"],
+    businessId: ["Business ID", "Tenant ID", "Client ID"],
+    photo: ["Photo", "Photos", "Image", "Images", "Gallery", "Media"],
+    photoBase64: ["PhotoBase64", "Photo Base64", "Image Data"]
+  };
+
+  const configured = APP_CONFIG.airtableFieldAliases || {};
+  return [
+    ...(Array.isArray(configured[role]) ? configured[role] : []),
+    ...(defaults[role] || [])
+  ];
+}
+
+function getFieldCandidates(role) {
+  const configuredFields = APP_CONFIG.airtableFields || {};
+  const candidates = [];
+
+  if (configuredFields[role]) {
+    candidates.push(configuredFields[role]);
+  }
+
+  if (role === "propertyName" && configuredFields.propertyNameFallback) {
+    candidates.push(configuredFields.propertyNameFallback);
+  }
+
+  candidates.push(...getFieldAliases(role));
+
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+function getFieldValue(fields, role) {
+  if (!fields || typeof fields !== "object") {
+    return "";
+  }
+
+  const normalizedEntries = Object.entries(fields).map(([key, value]) => [normalizeFieldName(key), value]);
+  for (const candidate of getFieldCandidates(role)) {
+    const normalizedCandidate = normalizeFieldName(candidate);
+    const entry = normalizedEntries.find(([name]) => name === normalizedCandidate);
+    if (entry && entry[1] !== undefined && entry[1] !== null && String(entry[1]).trim() !== "") {
+      return entry[1];
+    }
+  }
+
+  return "";
 }
 
 function normalizeApiFields(fields) {
@@ -212,19 +300,16 @@ function normalizeApiFields(fields) {
     return fields;
   }
 
-  const map = APP_CONFIG.airtableFields;
-  const photoField = fields[map.photo];
-
   return {
-    propertyName: fields[map.propertyName] || fields[map.propertyNameFallback] || "",
-    location: fields[map.location] || "",
-    price: fields[map.price] || "",
-    type: fields[map.type] || "",
-    status: fields[map.status] || "",
-    description: fields[map.description] || "",
-    businessId: fields[map.businessId] || "",
-    photo: photoField || "",
-    photoBase64: fields[map.photoBase64] || null
+    propertyName: getFieldValue(fields, "propertyName") || getFieldValue(fields, "propertyNameFallback") || "",
+    location: getFieldValue(fields, "location") || "",
+    price: getFieldValue(fields, "price") || "",
+    type: getFieldValue(fields, "type") || "",
+    status: getFieldValue(fields, "status") || "",
+    description: getFieldValue(fields, "description") || "",
+    businessId: getFieldValue(fields, "businessId") || "",
+    photo: getFieldValue(fields, "photo") || "",
+    photoBase64: getFieldValue(fields, "photoBase64") || null
   };
 }
 

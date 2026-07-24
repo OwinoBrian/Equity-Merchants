@@ -67,13 +67,22 @@ function setStaticWhatsAppLinks() {
 }
 
 function toggleMenu(forceClose = false) {
+  if (!navLinks || !menuToggle) {
+    return;
+  }
+
   const willOpen = forceClose ? false : !navLinks.classList.contains("is-open");
   navLinks.classList.toggle("is-open", willOpen);
   menuToggle.classList.toggle("is-active", willOpen);
   menuToggle.setAttribute("aria-expanded", String(willOpen));
+  document.body.classList.toggle("menu-open", willOpen);
 }
 
 function closeMenuOnNavigate() {
+  if (!navLinks) {
+    return;
+  }
+
   navLinks.querySelectorAll("a").forEach((link) => {
     link.addEventListener("click", () => toggleMenu(true));
   });
@@ -403,10 +412,29 @@ async function fetchListings() {
   }
 }
 
-menuToggle.addEventListener("click", () => toggleMenu());
+if (menuToggle) {
+  menuToggle.addEventListener("click", () => toggleMenu());
+}
+
 document.addEventListener("click", (event) => {
+  if (!navLinks || !menuToggle) {
+    return;
+  }
+
   const clickedInsideMenu = navLinks.contains(event.target) || menuToggle.contains(event.target);
   if (!clickedInsideMenu) {
+    toggleMenu(true);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    toggleMenu(true);
+  }
+});
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 768) {
     toggleMenu(true);
   }
 });

@@ -28,8 +28,27 @@
         <img class="logo-mark" data-brand-logo src="" alt="">
       </a>
       <div class="nav-actions">
+        <nav class="nav-links" id="nav-links" aria-label="Admin navigation">
+          <a href="index.html">Website</a>
+          <a href="form.html">Entry Form</a>
+          <a href="admin.html">Admin Home</a>
+          <button class="btn btn-primary" id="pwa-install-btn" type="button" hidden>Install App</button>
+        </nav>
         <a class="btn btn-outline" href="index.html">Back to Website</a>
-        <button class="btn btn-primary" id="pwa-install-btn" type="button" hidden>Install App</button>
+        <button
+          class="hamburger"
+          id="menu-toggle"
+          type="button"
+          aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <span class="hamburger-lines" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
       </div>
     </div>
   </header>
@@ -38,9 +57,9 @@
     <section class="admin-hero">
       <div class="container">
         <span class="admin-kicker">Client Instructions</span>
-        <h1 class="section-heading">Use this page to manage the properties that appear on the website.</h1>
+        <h1 class="section-heading">Use this page to manage the listings that appear on your website.</h1>
         <p class="section-copy">
-          Please use the buttons below whenever you want to add, edit, hide, or remove a listing. This page is your easiest starting point.
+          Use the links below whenever you want to add, edit, hide, or remove a listing. Keep this page bookmarked for quick access.
         </p>
       </div>
     </section>
@@ -49,15 +68,14 @@
       <div class="container admin-grid">
         <article class="card admin-card">
           <h3>Open the right Airtable pages</h3>
-          <p>Use these links depending on what you want to do. Once the Airtable links are added, this is the only page you need to bookmark.</p>
+          <p>Use these links depending on what you want to do. This is the page to keep bookmarked for everyday updates.</p>
           <div class="admin-link-stack">
             <a class="btn btn-primary" id="airtable-editor-link" href="#" target="_blank" rel="noopener noreferrer">Open Listings Editor</a>
-            <a class="btn btn-outline" id="airtable-add-link" href="#" target="_blank" rel="noopener noreferrer">Open Add Listing Form</a>
             <a class="btn btn-outline" href="form.html">Open Custom Entry Form</a>
             <a class="btn btn-outline" id="airtable-base-link" href="#" target="_blank" rel="noopener noreferrer">Open Full Airtable Base</a>
           </div>
           <div class="admin-note" id="admin-note">
-            Your links will appear here once they are connected in <code>config.js</code>.
+            Connect the Airtable links in <code>config.js</code> so this page opens the right editor and base for the client.
           </div>
         </article>
 
@@ -72,7 +90,7 @@
 
         <article class="card admin-card">
           <h3>What to include in every listing</h3>
-          <p>To make sure each property displays well on the website, please fill in these details clearly before publishing.</p>
+          <p>To make sure each listing displays well on the website, keep the required Airtable fields complete before publishing.</p>
           <div class="admin-link-stack">
             <div class="contact-item">
               <span>Required details</span>
@@ -98,7 +116,7 @@
         <div class="admin-steps">
           <article class="card admin-step">
             <h3>1. Add a new listing</h3>
-            <p>Click <strong>Open Add Listing Form</strong>, fill in the property details, upload the photos, and set <strong>Status</strong> to <strong>Active</strong> when you want it published.</p>
+            <p>Open the custom entry form, fill in the listing details, add the photos, and set <strong>Status</strong> to <strong>Active</strong> when you want it published.</p>
           </article>
           <article class="card admin-step">
             <h3>2. Edit an existing listing</h3>

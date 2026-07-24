@@ -32,7 +32,8 @@ The tenant-specific values currently live in `client-config.js`:
 - logo and favicon paths
 - WhatsApp, email, and address details
 - Airtable base and table identifiers
-- the active listing status and field labels
+- the active listing status
+- optional Airtable field aliases for auto-discovery
 
 The shared logic in `config.js` reads that config and applies it across all pages.
 
@@ -88,9 +89,13 @@ The backend lives in `functions/` at the repo root.
 
 Create one Airtable base and table named `Listings` for each tenant.
 
-Use these field names exactly unless you also update `client-config.js`:
+The app can now discover the actual Airtable column names by matching them against the aliases in `client-config.js`, so you do not need to hard-code exact field names for every tenant.
 
-- `Property Name`
+If you do want to pin exact names, `client-config.js` still supports `airtableFields`.
+
+Common field roles supported by the app:
+
+- `Property Name` or `Name`
 - `Location`
 - `Price`
 - `Type`

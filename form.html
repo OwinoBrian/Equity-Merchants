@@ -18,7 +18,27 @@
         <img class="logo-mark" data-brand-logo src="" alt="">
       </a>
       <div class="nav-actions">
+        <nav class="nav-links" id="nav-links" aria-label="Form navigation">
+          <a href="index.html">Website</a>
+          <a href="admin.html">Admin</a>
+          <a href="form.html">Entry Form</a>
+          <button class="btn btn-primary" id="pwa-install-btn" type="button" hidden>Install App</button>
+        </nav>
         <a class="btn btn-outline" href="index.html">Back to Website</a>
+        <button
+          class="hamburger"
+          id="menu-toggle"
+          type="button"
+          aria-label="Toggle menu"
+          aria-expanded="false"
+          aria-controls="nav-links"
+        >
+          <span class="hamburger-lines" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </span>
+        </button>
       </div>
     </div>
   </header>
@@ -83,10 +103,20 @@
             </div>
 
             <div class="field">
-              <label for="photo-files">Or upload images</label>
-              <input id="photo-files" name="photoFiles" type="file" accept="image/jpeg,image/png,image/webp" multiple>
-              <p class="section-copy" style="margin-top: .35rem;">Select one or more images. They upload to R2 when you save the listing.</p>
-              <div id="photo-previews" style="display:grid; grid-template-columns: repeat(auto-fill, minmax(120px,1fr)); gap:.5rem; margin-top:.5rem;"></div>
+              <label for="photo-files">Photos</label>
+              <div class="upload-card" id="photo-dropzone" role="button" tabindex="0">
+                <div class="upload-card-copy">
+                  <strong>Drag, drop, tap, or take photos</strong>
+                  <p>Use your camera on mobile, or pick images from your gallery. Photos are added when you save the listing.</p>
+                </div>
+                <div class="upload-card-actions">
+                  <button class="btn btn-outline" id="photo-pick-btn" type="button">Choose Images</button>
+                  <button class="btn btn-outline" id="photo-camera-btn" type="button">Take Photo</button>
+                </div>
+                <input id="photo-files" type="file" accept="image/*" multiple hidden>
+                <input id="photo-camera" type="file" accept="image/*" capture="environment" hidden>
+                <div id="photo-previews" class="photo-preview-grid"></div>
+              </div>
             </div>
 
             <div class="field">
@@ -94,7 +124,7 @@
               <input id="share-link" name="shareLink" readonly placeholder="Will appear after save">
             </div>
 
-            <div class="form-actions" style="display:flex; flex-wrap: wrap; gap: .75rem;">
+            <div class="form-actions">
               <button class="btn btn-primary" type="submit">Save Listing</button>
               <a class="btn btn-outline" href="admin.html">Open Admin</a>
             </div>

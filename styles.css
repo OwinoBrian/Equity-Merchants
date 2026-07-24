@@ -52,6 +52,10 @@ body.modal-open {
   overflow: hidden;
 }
 
+body.menu-open {
+  overflow: hidden;
+}
+
 img {
   display: block;
   width: 100%;
@@ -201,6 +205,10 @@ button {
   transition:
     background var(--transition),
     color var(--transition);
+}
+
+.nav-links .btn {
+  width: auto;
 }
 
 .nav-links a:hover,
@@ -786,6 +794,112 @@ button {
   gap: 0.95rem;
 }
 
+.upload-card {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+  border: 1px dashed color-mix(in srgb, var(--color-secondary) 20%, transparent);
+  border-radius: var(--radius-card);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95), rgba(255, 255, 255, 0.82));
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition),
+    transform var(--transition);
+}
+
+.upload-card:hover,
+.upload-card:focus-within {
+  border-color: color-mix(in srgb, var(--color-primary) 22%, transparent);
+  box-shadow: var(--shadow-soft);
+  transform: translateY(-1px);
+}
+
+.upload-card.is-dragover {
+  border-color: var(--crimson);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--color-primary) 12%, transparent);
+}
+
+.upload-card-copy {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.upload-card-copy strong {
+  color: var(--navy);
+  font-size: 1rem;
+}
+
+.upload-card-copy p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.upload-card-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.photo-preview-grid {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+}
+
+.photo-preview-empty {
+  grid-column: 1 / -1;
+  padding: 0.95rem;
+  border-radius: min(var(--radius-card), 16px);
+  background: rgba(255, 255, 255, 0.7);
+  color: var(--muted);
+  text-align: center;
+}
+
+.photo-preview-card {
+  overflow: hidden;
+  display: grid;
+  gap: 0.55rem;
+  border-radius: min(var(--radius-card), 18px);
+  border: 1px solid color-mix(in srgb, var(--color-secondary) 10%, transparent);
+  background: var(--white);
+  box-shadow: var(--shadow-soft);
+  cursor: pointer;
+}
+
+.photo-preview-card img {
+  aspect-ratio: 1 / 1;
+  object-fit: cover;
+}
+
+.photo-preview-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0 0.75rem 0.75rem;
+}
+
+.photo-preview-label {
+  color: var(--navy);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.photo-preview-remove {
+  color: var(--crimson);
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
 .field {
   display: grid;
   gap: 0.45rem;
@@ -1168,14 +1282,37 @@ button {
     display: none;
   }
 
+  .nav-actions > .btn:not(.hamburger) {
+    display: none;
+  }
+
+  .nav-links .btn {
+    width: 100%;
+  }
+
   .hero-copy h1 {
     max-width: 12ch;
+  }
+
+  .btn {
+    min-height: 2.75rem;
+    padding: 0.75rem 1rem;
   }
 
   .hero-cta .btn,
   .contact-form .btn,
   .contact-card .btn,
-  .modal-actions .btn {
+  .modal-actions .btn,
+  .form-actions .btn,
+  .admin-link-stack .btn {
+    width: 100%;
+  }
+
+  .upload-card-actions {
+    flex-direction: column;
+  }
+
+  .upload-card-actions .btn {
     width: 100%;
   }
 
@@ -1186,6 +1323,10 @@ button {
 
   .pagination {
     grid-template-columns: 1fr;
+  }
+
+  .form-actions {
+    flex-direction: column;
   }
 }
 

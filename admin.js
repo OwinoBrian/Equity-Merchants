@@ -2,6 +2,8 @@ const editorLink = document.getElementById("airtable-editor-link");
 const addLink = document.getElementById("airtable-add-link");
 const baseLink = document.getElementById("airtable-base-link");
 const adminNote = document.getElementById("admin-note");
+const navLinks = document.getElementById("nav-links");
+const menuToggle = document.getElementById("menu-toggle");
 
 function applyAdminLink(element, url) {
   if (!element) {
@@ -28,7 +30,7 @@ if (
   !APP_CONFIG.airtableAddFormUrl.includes("YOUR_") &&
   !APP_CONFIG.airtableBaseUrl.includes("YOUR_")
 ) {
-  adminNote.textContent = "This admin page is ready to share. Use it as the single bookmark for your client.";
+  adminNote.textContent = "Use the links above to keep the listing data up to date.";
 }
 
 // Pending submissions UI
@@ -79,3 +81,48 @@ if (retryBtn) {
 }
 
 updatePendingCount();
+
+function toggleMenu(forceClose = false) {
+  if (!navLinks || !menuToggle) {
+    return;
+  }
+
+  const willOpen = forceClose ? false : !navLinks.classList.contains("is-open");
+  navLinks.classList.toggle("is-open", willOpen);
+  menuToggle.classList.toggle("is-active", willOpen);
+  menuToggle.setAttribute("aria-expanded", String(willOpen));
+  document.body.classList.toggle("menu-open", willOpen);
+}
+
+if (menuToggle) {
+  menuToggle.addEventListener("click", () => toggleMenu());
+}
+
+if (navLinks) {
+  navLinks.querySelectorAll("a, button").forEach((link) => {
+    link.addEventListener("click", () => toggleMenu(true));
+  });
+}
+
+document.addEventListener("click", (event) => {
+  if (!navLinks || !menuToggle) {
+    return;
+  }
+
+  const clickedInsideMenu = navLinks.contains(event.target) || menuToggle.contains(event.target);
+  if (!clickedInsideMenu) {
+    toggleMenu(true);
+  }
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape") {
+    toggleMenu(true);
+  }
+});
+
+window.addEventListener("resize", () => {
+  if (window.innerWidth >= 768) {
+    toggleMenu(true);
+  }
+});

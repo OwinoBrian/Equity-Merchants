@@ -55,16 +55,16 @@ const APP_CONFIG = {
   airtableAddFormUrl: "https://airtable.com/app1v1HsEckeM9MGd/pagWEy5JYFErSCwn4/form",
   airtableBaseUrl: "https://airtable.com/app1v1HsEckeM9MGd",
   activeListingStatus: "Active",
-  airtableFields: {
-    propertyName: "Property Name",
-    propertyNameFallback: "Name",
-    location: "Location",
-    price: "Price",
-    type: "Type",
-    status: "Status",
-    description: "Description",
-    businessId: "Business ID",
-    photo: "Photo",
-    photoBase64: "PhotoBase64"
+  airtableFieldAliases: {
+    propertyName: ["Property Name", "Name", "Title", "Listing Name"],
+    propertyNameFallback: ["Name", "Title"],
+    location: ["Location", "Area", "Town", "City", "Address"],
+    price: ["Price", "Amount", "Cost", "Rate"],
+    type: ["Type", "Category", "Listing Type"],
+    status: ["Status", "State", "Availability"],
+    description: ["Description", "Details", "Summary"],
+    businessId: ["Business ID", "Tenant ID", "Client ID"],
+    photo: ["Photo", "Photos", "Image", "Images", "Gallery", "Media"],
+    photoBase64: ["PhotoBase64", "Photo Base64", "Image Data"]
   }
 };

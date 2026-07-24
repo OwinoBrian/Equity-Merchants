@@ -11,9 +11,22 @@ const DEFAULT_FIELD_CONFIG = {
     photo: "Photo",
     photoBase64: "PhotoBase64"
   },
+  fieldAliases: {
+    propertyName: ["Property Name", "Name", "Title", "Listing Name"],
+    propertyNameFallback: ["Name", "Title"],
+    location: ["Location", "Area", "Town", "City", "Address"],
+    price: ["Price", "Amount", "Cost", "Rate"],
+    type: ["Type", "Category", "Listing Type"],
+    status: ["Status", "State", "Availability"],
+    description: ["Description", "Details", "Summary"],
+    businessId: ["Business ID", "Tenant ID", "Client ID"],
+    photo: ["Photo", "Photos", "Image", "Images", "Gallery", "Media"],
+    photoBase64: ["PhotoBase64", "Photo Base64", "Image Data"]
+  },
   activeStatus: "Active"
 };
 
+const FIELD_CONFIG_CACHE = new Map();
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_MIME_TYPES = {
   "image/jpeg": "jpg",
@@ -21,22 +34,91 @@ const ALLOWED_IMAGE_MIME_TYPES = {
   "image/webp": "webp"
 };
 const UPLOAD_FIELD_NAMES = ["photoFile", "photo", "file", "image", "photoFiles"];
+const REQUIRED_FIELD_ROLES = [
+  "propertyName",
+  "propertyNameFallback",
+  "location",
+  "price",
+  "type",
+  "status",
+  "description",
+  "businessId",
+  "photo",
+  "photoBase64"
+];
 
 export function parseFieldConfig(requestUrl) {
   const raw = requestUrl.searchParams.get("fieldConfig");
   if (!raw) {
-    return DEFAULT_FIELD_CONFIG;
+    return {
+      fields: {},
+      fieldAliases: DEFAULT_FIELD_CONFIG.fieldAliases,
+      activeStatus: DEFAULT_FIELD_CONFIG.activeStatus
+    };
   }
 
   try {
     const parsed = JSON.parse(raw);
     return {
-      fields: { ...DEFAULT_FIELD_CONFIG.fields, ...(parsed.fields || {}) },
+      fields: normalizeFieldMap(parsed.fields),
+      fieldAliases: mergeFieldAliases(parsed.fieldAliases),
       activeStatus: parsed.activeStatus || DEFAULT_FIELD_CONFIG.activeStatus
     };
   } catch (error) {
-    return DEFAULT_FIELD_CONFIG;
+    return {
+      fields: {},
+      fieldAliases: DEFAULT_FIELD_CONFIG.fieldAliases,
+      activeStatus: DEFAULT_FIELD_CONFIG.activeStatus
+    };
   }
+}
+
+export async function resolveFieldConfig(env, fieldConfig) {
+  ensureAirtableEnv(env);
+
+  const normalizedConfig = {
+    fields: normalizeFieldMap(fieldConfig.fields),
+    fieldAliases: mergeFieldAliases(fieldConfig.fieldAliases),
+    activeStatus: fieldConfig.activeStatus || DEFAULT_FIELD_CONFIG.activeStatus
+  };
+  const cacheKey = [
+    env.AIRTABLE_BASE_ID,
+    env.AIRTABLE_TABLE_NAME,
+    JSON.stringify(normalizedConfig.fields),
+    JSON.stringify(normalizedConfig.fieldAliases),
+    normalizedConfig.activeStatus
+  ].join("::");
+
+  if (FIELD_CONFIG_CACHE.has(cacheKey)) {
+    return FIELD_CONFIG_CACHE.get(cacheKey);
+  }
+
+  const requiredMap = buildFieldMapFromAliases(normalizedConfig.fieldAliases);
+  const needsDiscovery = REQUIRED_FIELD_ROLES.some((role) => !normalizedConfig.fields[role]);
+
+  let resolvedFields = {
+    ...requiredMap,
+    ...normalizedConfig.fields
+  };
+
+  if (needsDiscovery) {
+    const metadataFields = await fetchAirtableTableFields(env).catch(() => []);
+    const discoveredFields = buildFieldMapFromMetadata(metadataFields, normalizedConfig.fieldAliases);
+    resolvedFields = {
+      ...requiredMap,
+      ...discoveredFields,
+      ...normalizedConfig.fields
+    };
+  }
+
+  const resolved = {
+    fields: fillMissingFieldMap(resolvedFields, normalizedConfig.fieldAliases),
+    fieldAliases: normalizedConfig.fieldAliases,
+    activeStatus: normalizedConfig.activeStatus
+  };
+
+  FIELD_CONFIG_CACHE.set(cacheKey, resolved);
+  return resolved;
 }
 
 export function normalizePhotoUrls(value) {
@@ -61,48 +143,49 @@ export function normalizePhotoUrls(value) {
 }
 
 export function buildAirtableFields(payload, fieldConfig) {
-  const map = fieldConfig.fields;
+  const map = fieldConfig.fields || {};
   const photoUrls = normalizePhotoUrls(payload.photoUrls);
   const priceValue = String(payload.price || "").trim();
   const numericPrice = Number(priceValue);
+  const fields = {};
 
-  return {
-    [map.propertyName]: payload.propertyName || "",
-    [map.location]: payload.location || "",
-    [map.price]: priceValue && Number.isFinite(numericPrice) ? numericPrice : "",
-    [map.type]: payload.type || "House",
-    [map.status]: payload.status || fieldConfig.activeStatus,
-    [map.description]: payload.description || "",
-    [map.businessId]: payload.businessId || "",
-    [map.photo]: photoUrls.join("\n")
-  };
+  setFieldValue(fields, map.propertyName, payload.propertyName || "");
+  setFieldValue(fields, map.location, payload.location || "");
+  setFieldValue(fields, map.price, priceValue && Number.isFinite(numericPrice) ? numericPrice : "");
+  setFieldValue(fields, map.type, payload.type || "House");
+  setFieldValue(fields, map.status, payload.status || fieldConfig.activeStatus);
+  setFieldValue(fields, map.description, payload.description || "");
+  setFieldValue(fields, map.businessId, payload.businessId || "");
+  setFieldValue(fields, map.photo, photoUrls.join("\n"));
+
+  return fields;
 }
 
 export function sanitizeRecord(record, fieldConfig) {
-  const map = fieldConfig.fields;
   const raw = record.fields || {};
 
   return {
     id: record.id,
     createdTime: record.createdTime,
     fields: {
-      propertyName: raw[map.propertyName] || raw[map.propertyNameFallback] || "",
-      location: raw[map.location] || "",
-      price: raw[map.price] || "",
-      type: raw[map.type] || "",
-      status: raw[map.status] || "",
-      description: raw[map.description] || "",
-      businessId: raw[map.businessId] || "",
-      photo: raw[map.photo] || "",
-      photoBase64: raw[map.photoBase64] || null
+      propertyName: readFieldValue(raw, "propertyName", fieldConfig)
+        || readFieldValue(raw, "propertyNameFallback", fieldConfig)
+        || "",
+      location: readFieldValue(raw, "location", fieldConfig) || "",
+      price: readFieldValue(raw, "price", fieldConfig) || "",
+      type: readFieldValue(raw, "type", fieldConfig) || "",
+      status: readFieldValue(raw, "status", fieldConfig) || "",
+      description: readFieldValue(raw, "description", fieldConfig) || "",
+      businessId: readFieldValue(raw, "businessId", fieldConfig) || "",
+      photo: readFieldValue(raw, "photo", fieldConfig) || "",
+      photoBase64: readFieldValue(raw, "photoBase64", fieldConfig) || null
     }
   };
 }
 
 export async function listListings(env, fieldConfig, businessId) {
-  ensureAirtableEnv(env);
-
-  const { fields, activeStatus } = fieldConfig;
+  const resolvedFieldConfig = await resolveFieldConfig(env, fieldConfig);
+  const { fields, activeStatus } = resolvedFieldConfig;
   const endpoint = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}`);
   let filterFormula = `{${fields.status}}='${escapeFormulaValue(activeStatus)}'`;
 
@@ -125,10 +208,11 @@ export async function listListings(env, fieldConfig, businessId) {
 
   const data = await airtableResponse.json();
   const records = Array.isArray(data.records) ? data.records : [];
-  return records.map((record) => sanitizeRecord(record, fieldConfig));
+  return records.map((record) => sanitizeRecord(record, resolvedFieldConfig));
 }
 
 export async function getListingById(env, fieldConfig, recordId) {
+  const resolvedFieldConfig = await resolveFieldConfig(env, fieldConfig);
   ensureAirtableEnv(env);
 
   if (!recordId) {
@@ -147,14 +231,15 @@ export async function getListingById(env, fieldConfig, recordId) {
   }
 
   const record = await airtableResponse.json();
-  return sanitizeRecord(record, fieldConfig);
+  return sanitizeRecord(record, resolvedFieldConfig);
 }
 
 export async function saveListing(env, fieldConfig, payload) {
+  const resolvedFieldConfig = await resolveFieldConfig(env, fieldConfig);
   ensureAirtableEnv(env);
 
   const endpoint = new URL(`https://api.airtable.com/v0/${env.AIRTABLE_BASE_ID}/${encodeURIComponent(env.AIRTABLE_TABLE_NAME)}`);
-  const fields = buildAirtableFields(payload, fieldConfig);
+  const fields = buildAirtableFields(payload, resolvedFieldConfig);
   const updateRecordId = String(payload.recordId || "").trim();
 
   const airtableResponse = updateRecordId
@@ -177,9 +262,9 @@ export async function saveListing(env, fieldConfig, payload) {
       ...data,
       fields: {
         ...(data.fields || {}),
-        [fieldConfig.fields.photo]: fields[fieldConfig.fields.photo] || ""
+        ...(resolvedFieldConfig.fields.photo ? { [resolvedFieldConfig.fields.photo]: fields[resolvedFieldConfig.fields.photo] || "" } : {})
       }
-    }, fieldConfig)
+    }, resolvedFieldConfig)
   };
 }
 
@@ -242,6 +327,184 @@ export function jsonResponse(data, status = 200) {
       "Content-Type": "application/json; charset=utf-8"
     }
   });
+}
+
+function normalizeFieldMap(fieldMap) {
+  if (!fieldMap || typeof fieldMap !== "object") {
+    return {};
+  }
+
+  return Object.fromEntries(
+    Object.entries(fieldMap)
+      .filter(([, value]) => typeof value === "string" && value.trim())
+      .map(([key, value]) => [key, value.trim()])
+  );
+}
+
+function mergeFieldAliases(fieldAliases) {
+  const merged = {};
+  const source = {
+    ...DEFAULT_FIELD_CONFIG.fieldAliases,
+    ...(fieldAliases && typeof fieldAliases === "object" ? fieldAliases : {})
+  };
+
+  Object.entries(source).forEach(([role, values]) => {
+    merged[role] = Array.from(new Set([
+      ...(Array.isArray(values) ? values : []),
+      ...(DEFAULT_FIELD_CONFIG.fieldAliases[role] || [])
+    ].map((item) => String(item || "").trim()).filter(Boolean)));
+  });
+
+  return merged;
+}
+
+function buildFieldMapFromAliases(fieldAliases) {
+  const map = {};
+  Object.entries(DEFAULT_FIELD_CONFIG.fieldAliases).forEach(([role, defaultAliases]) => {
+    const roleAliases = fieldAliases[role] || defaultAliases;
+    map[role] = Array.isArray(roleAliases) && roleAliases.length ? roleAliases[0] : DEFAULT_FIELD_CONFIG.fields[role] || "";
+  });
+  return map;
+}
+
+function buildFieldMapFromMetadata(fields, fieldAliases) {
+  const fieldNames = Array.isArray(fields)
+    ? fields
+        .map((field) => String(field && field.name ? field.name : "").trim())
+        .filter(Boolean)
+    : [];
+
+  if (!fieldNames.length) {
+    return buildFieldMapFromAliases(fieldAliases);
+  }
+
+  const normalizedLookup = new Map(fieldNames.map((name) => [normalizeFieldName(name), name]));
+  const pickName = (role) => {
+    const candidates = [
+      ...(Array.isArray(fieldAliases[role]) ? fieldAliases[role] : []),
+      ...(Array.isArray(DEFAULT_FIELD_CONFIG.fieldAliases[role]) ? DEFAULT_FIELD_CONFIG.fieldAliases[role] : [])
+    ];
+
+    for (const candidate of candidates) {
+      const match = normalizedLookup.get(normalizeFieldName(candidate));
+      if (match) {
+        return match;
+      }
+    }
+
+    return normalizedLookup.get(normalizeFieldName(DEFAULT_FIELD_CONFIG.fields[role])) || DEFAULT_FIELD_CONFIG.fields[role] || "";
+  };
+
+  return {
+    propertyName: pickName("propertyName"),
+    propertyNameFallback: pickName("propertyNameFallback"),
+    location: pickName("location"),
+    price: pickName("price"),
+    type: pickName("type"),
+    status: pickName("status"),
+    description: pickName("description"),
+    businessId: pickName("businessId"),
+    photo: pickName("photo"),
+    photoBase64: pickName("photoBase64")
+  };
+}
+
+function fillMissingFieldMap(fieldMap, fieldAliases) {
+  const fallbackMap = buildFieldMapFromAliases(fieldAliases);
+  return REQUIRED_FIELD_ROLES.reduce((accumulator, role) => {
+    accumulator[role] = fieldMap[role] || fallbackMap[role] || DEFAULT_FIELD_CONFIG.fields[role] || "";
+    return accumulator;
+  }, {});
+}
+
+async function fetchAirtableTableFields(env) {
+  const response = await fetch(`https://api.airtable.com/v0/meta/bases/${env.AIRTABLE_BASE_ID}/tables`, {
+    headers: {
+      Authorization: `Bearer ${env.AIRTABLE_API_KEY}`
+    }
+  });
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json().catch(() => ({}));
+  const tables = Array.isArray(data.tables) ? data.tables : [];
+  const normalizedTarget = normalizeFieldName(env.AIRTABLE_TABLE_NAME);
+  const table = tables.find((item) => {
+    const tableName = String(item && item.name ? item.name : "").trim();
+    const tableId = String(item && item.id ? item.id : "").trim();
+    return normalizeFieldName(tableName) === normalizedTarget || normalizeFieldName(tableId) === normalizedTarget;
+  }) || tables[0] || null;
+
+  return Array.isArray(table && table.fields) ? table.fields : [];
+}
+
+function readFieldValue(raw, role, fieldConfig) {
+  const candidates = getFieldCandidates(role, fieldConfig);
+
+  for (const candidate of candidates) {
+    const value = findRawFieldValue(raw, candidate);
+    if (value !== undefined && value !== null && String(value).trim() !== "") {
+      return value;
+    }
+  }
+
+  return "";
+}
+
+function getFieldCandidates(role, fieldConfig) {
+  const configured = fieldConfig.fields || {};
+  const aliases = fieldConfig.fieldAliases || DEFAULT_FIELD_CONFIG.fieldAliases;
+  const candidates = [];
+
+  if (configured[role]) {
+    candidates.push(configured[role]);
+  }
+
+  if (role === "propertyName" && configured.propertyNameFallback) {
+    candidates.push(configured.propertyNameFallback);
+  }
+
+  if (Array.isArray(aliases[role])) {
+    candidates.push(...aliases[role]);
+  }
+
+  if (role === "propertyName" && Array.isArray(aliases.propertyNameFallback)) {
+    candidates.push(...aliases.propertyNameFallback);
+  }
+
+  if (Array.isArray(DEFAULT_FIELD_CONFIG.fieldAliases[role])) {
+    candidates.push(...DEFAULT_FIELD_CONFIG.fieldAliases[role]);
+  }
+
+  return [...new Set(candidates.filter(Boolean))];
+}
+
+function findRawFieldValue(raw, candidate) {
+  const normalizedCandidate = normalizeFieldName(candidate);
+  for (const [key, value] of Object.entries(raw || {})) {
+    if (normalizeFieldName(key) === normalizedCandidate) {
+      return value;
+    }
+  }
+
+  return undefined;
+}
+
+function setFieldValue(target, fieldName, value) {
+  if (!fieldName) {
+    return;
+  }
+
+  target[fieldName] = value;
+}
+
+function normalizeFieldName(value) {
+  return String(value || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "");
 }
 
 function ensureAirtableEnv(env) {
