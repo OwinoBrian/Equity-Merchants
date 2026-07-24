@@ -201,6 +201,50 @@ function getGenericWhatsAppMessage() {
   return `Hello ${APP_CONFIG.siteName}, I would like to learn more about your available properties and services.`;
 }
 
+function getContactEntries() {
+  if (Array.isArray(APP_CONFIG.contacts) && APP_CONFIG.contacts.length) {
+    return APP_CONFIG.contacts
+      .map((entry) => normalizeContactEntry(entry))
+      .filter(Boolean);
+  }
+
+  const fallbackEntries = [];
+  if (APP_CONFIG.contactEmail) {
+    fallbackEntries.push({
+      label: "Email",
+      type: "email",
+      value: APP_CONFIG.contactEmail
+    });
+  }
+
+  if (APP_CONFIG.whatsappNumber) {
+    fallbackEntries.push({
+      label: "Phone / WhatsApp",
+      type: "whatsapp",
+      value: APP_CONFIG.whatsappNumber
+    });
+  }
+
+  if (APP_CONFIG.address) {
+    fallbackEntries.push({
+      label: "Address",
+      type: "text",
+      value: APP_CONFIG.address
+    });
+  }
+
+  return fallbackEntries;
+}
+
+function getPrimaryWhatsAppNumber() {
+  const contact = getContactEntries().find((entry) => entry.type === "whatsapp" || entry.type === "phone");
+  if (contact) {
+    return normalizePhoneNumber(contact.value) || APP_CONFIG.whatsappNumber || "";
+  }
+
+  return APP_CONFIG.whatsappNumber || "";
+}
+
 function getRequiredFieldLabels() {
   const fields = APP_CONFIG.airtableFields || {};
   const aliases = APP_CONFIG.airtableFieldAliases || {};
@@ -229,11 +273,119 @@ function getRequiredFieldLabels() {
   ].join(", ");
 }
 
+function escapeHtml(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 function normalizeFieldName(value) {
   return String(value || "")
     .trim()
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeContactEntry(entry) {
+  if (!entry || typeof entry !== "object") {
+    return null;
+  }
+
+  const label = String(entry.label || entry.name || entry.title || "").trim();
+  const type = String(entry.type || "text").trim().toLowerCase();
+  const value = String(entry.value || entry.content || entry.text || "").trim();
+  if (!label || !value) {
+    return null;
+  }
+
+  return {
+    label,
+    type,
+    value,
+    display: String(entry.display || entry.displayValue || "").trim() || formatContactDisplay(type, value),
+    href: String(entry.href || "").trim()
+  };
+}
+
+function normalizePhoneNumber(value) {
+  return String(value || "").replace(/[^\d]/g, "");
+}
+
+function formatContactDisplay(type, value) {
+  if (type === "email") {
+    return value;
+  }
+
+  if (type === "whatsapp" || type === "phone") {
+    return value.startsWith("254") ? formatWhatsAppDisplay(value) : value;
+  }
+
+  return value;
+}
+
+function getContactHref(entry) {
+  if (entry.href) {
+    return entry.href;
+  }
+
+  if (entry.type === "email") {
+    return `mailto:${entry.value}`;
+  }
+
+  if (entry.type === "whatsapp") {
+    const phone = entry.value.replace(/[^\d]/g, "");
+    return phone ? `https://wa.me/${phone}` : "";
+  }
+
+  if (entry.type === "phone") {
+    const phone = entry.value.replace(/[^\d+]/g, "");
+    return phone ? `tel:${phone}` : "";
+  }
+
+  if (entry.type === "url" || entry.type === "link") {
+    return entry.value;
+  }
+
+  return "";
+}
+
+function renderContactEntries() {
+  const entries = getContactEntries();
+  document.querySelectorAll("[data-brand-contacts]").forEach((container) => {
+    container.innerHTML = "";
+
+    if (!entries.length) {
+      return;
+    }
+
+    entries.forEach((entry) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "contact-item contact-entry";
+
+      const label = document.createElement("span");
+      label.textContent = entry.label;
+      wrapper.appendChild(label);
+
+      const href = getContactHref(entry);
+      const valueEl = href ? document.createElement("a") : document.createElement("span");
+      valueEl.className = "contact-value";
+      valueEl.textContent = entry.display || entry.value;
+
+      if (href) {
+        valueEl.href = href;
+        if (entry.type === "whatsapp" || entry.type === "phone") {
+          valueEl.target = "_blank";
+          valueEl.rel = "noopener noreferrer";
+        }
+      }
+
+      wrapper.appendChild(valueEl);
+      container.appendChild(wrapper);
+    });
+  });
 }
 
 function getFieldAliases(role) {
@@ -469,6 +621,7 @@ function applyBranding() {
   setText("[data-brand-map-text]", APP_CONFIG.mapText);
   setText("[data-brand-credit]", APP_CONFIG.footerCredit);
   setText("[data-brand-field-list]", getRequiredFieldLabels());
+  renderContactEntries();
 
   document.querySelectorAll("[data-brand-logo]").forEach((element) => {
     if (element.tagName.toLowerCase() === "img") {
@@ -510,7 +663,7 @@ function applyBranding() {
         streetAddress: APP_CONFIG.address
       },
       email: APP_CONFIG.contactEmail,
-      telephone: `+${APP_CONFIG.whatsappNumber}`
+      telephone: `+${getPrimaryWhatsAppNumber() || APP_CONFIG.whatsappNumber || ""}`
     });
   }
 }

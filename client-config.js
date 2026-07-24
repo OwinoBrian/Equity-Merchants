@@ -46,6 +46,23 @@ const APP_CONFIG = {
   apiBaseUrl: "/api",
   footerCredit: "Built by Ujao Defined",
   footerCreditUrl: "https://ujao-defined.com",
+  contacts: [
+    {
+      label: "Office Email",
+      type: "email",
+      value: "foyerproperties@protonmail.com"
+    },
+    {
+      label: "Sales WhatsApp",
+      type: "whatsapp",
+      value: "254718062312"
+    },
+    {
+      label: "Office Location",
+      type: "text",
+      value: "Nairobi, Kenya"
+    }
+  ],
   // Airtable — per client. The base id + table are passed to the API per request
   // so each client reads/writes only their own base. These are not secrets
   // (the API token that grants access is the secret, set on the Cloudflare project).

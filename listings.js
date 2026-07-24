@@ -1,5 +1,7 @@
 // WhatsApp contact number used across the site.
-const WHATSAPP_NUMBER = APP_CONFIG.whatsappNumber;
+const WHATSAPP_NUMBER = typeof getPrimaryWhatsAppNumber === "function"
+  ? getPrimaryWhatsAppNumber()
+  : APP_CONFIG.whatsappNumber;
 const LISTINGS_API_URL = getListingsApiUrl();
 const LISTINGS_PER_PAGE = 6;
 

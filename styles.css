@@ -779,6 +779,11 @@ button {
   );
 }
 
+.contact-entry {
+  display: grid;
+  gap: 0.2rem;
+}
+
 .contact-item span {
   display: block;
   color: var(--navy);
@@ -787,6 +792,16 @@ button {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   margin-bottom: 0.3rem;
+}
+
+.contact-value {
+  color: var(--charcoal);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.contact-value[href] {
+  color: var(--navy);
 }
 
 .contact-form {

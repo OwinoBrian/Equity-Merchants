@@ -4,3 +4,4 @@ cloudflare-worker/.dev.vars
 cloudflare-worker/.dev.vars.*
 cloudflare-worker/.wrangler/
 cloudflare-worker/node_modules/
+client-config.generated.js

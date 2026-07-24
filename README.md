@@ -31,6 +31,7 @@ The tenant-specific values currently live in `client-config.js`:
 - site and brand names
 - logo and favicon paths
 - WhatsApp, email, and address details
+- optional contact entries for the contact section
 - Airtable base and table identifiers
 - the active listing status
 - optional Airtable field aliases for auto-discovery
@@ -38,6 +39,19 @@ The tenant-specific values currently live in `client-config.js`:
 The shared logic in `config.js` reads that config and applies it across all pages.
 
 For a new client, copy `client-config.js`, update the values, and deploy that version as its own Cloudflare Pages project or preview branch.
+
+If you want the repo to discover the Airtable columns for you, run the setup wizard:
+
+```bash
+node setup-tenant.mjs --output client-config.js
+```
+
+That script will:
+
+- ask for the tenant details and contact entries
+- inspect Airtable metadata and sample records
+- generate the resolved `airtableFields` mapping
+- write a config file you can use directly or review first
 
 ## Cloudflare onboarding flow
 
@@ -92,6 +106,13 @@ Create one Airtable base and table named `Listings` for each tenant.
 The app can now discover the actual Airtable column names by matching them against the aliases in `client-config.js`, so you do not need to hard-code exact field names for every tenant.
 
 If you do want to pin exact names, `client-config.js` still supports `airtableFields`.
+
+The recommended path is:
+
+1. Create the tenant's base and table in Airtable.
+2. Add the fields you want for that tenant.
+3. Run `node setup-tenant.mjs --output client-config.js`.
+4. Review the generated mapping before deploying.
 
 Common field roles supported by the app:
 
